@@ -17,8 +17,7 @@
  *   SLACK_CHANNEL        Default Slack channel ID to post to (e.g. C1234567890)
  *
  * CLI usage:
- *   mkdir -p .cline/plugins
- *   cp examples/plugins/intercom-support-triage.ts .cline/plugins/intercom-support-triage.ts
+ *   cline plugin install intercom-support-triage-slack
  *   INTERCOM_API_TOKEN=... SLACK_BOT_TOKEN=xoxb-... SLACK_CHANNEL=C123... \
  *     cline -i "Fetch the last 24 hours of Intercom support requests, classify them, and post a summary to Slack"
  */
@@ -521,7 +520,7 @@ const ALLOWED_TOOLS = new Set([
 ]);
 
 const plugin: AgentPlugin = {
-	name: "intercom-support-triage",
+	name: "intercom-support-triage-slack",
 	manifest: {
 		capabilities: ["tools", "hooks"],
 	},

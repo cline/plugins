@@ -1,4 +1,4 @@
-# intercom-support-triage
+# intercom-support-triage-slack
 
 Fetches Intercom support conversations and posts triage summaries to Slack.
 
@@ -9,13 +9,13 @@ Registers `fetch_intercom_conversations` and `post_slack_summary`. The intended 
 ## Install
 
 ```bash
-cline plugin install intercom-support-triage
+cline plugin install intercom-support-triage-slack
 ```
 
 For local development from this repository:
 
 ```bash
-cline plugin install ./plugins/intercom-support-triage --cwd .
+cline plugin install ./plugins/intercom-support-triage-slack --cwd .
 ```
 
 ## Example Usage
