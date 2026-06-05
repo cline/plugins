@@ -1,4 +1,4 @@
-# data-analyst
+# clickhouse-data-analyst
 
 Bundle the ClickHouse data analyst skill as an installable Cline plugin.
 
@@ -11,13 +11,13 @@ The package also bundles the ClickHouse skills that `data-analyst` references fo
 ## Install
 
 ```bash
-cline plugin install data-analyst
+cline plugin install clickhouse-data-analyst
 ```
 
 For local development from this repository:
 
 ```bash
-cline plugin install ./plugins/data-analyst --cwd .
+cline plugin install ./plugins/clickhouse-data-analyst --cwd .
 ```
 
 ## Example Usage
