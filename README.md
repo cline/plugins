@@ -3,7 +3,10 @@
 
 Official curated plugins for Cline. This repository is the default collection behind Cline CLI slug installs, e.g.:
 ```bash
+# Install the Cline CLI first.
 npm i -g cline
+
+# Download a curated plugin from this repository.
 cline plugin install nanobanana
 ```
 
