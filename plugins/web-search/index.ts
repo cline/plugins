@@ -4,7 +4,7 @@
  * Registers a `web_search` tool backed by Exa.
  *
  * CLI usage:
- *   cline plugin install https://github.com/cline/cline/blob/main/sdk/examples/plugins/web-search.ts --cwd .
+ *   cline plugin install web-search
  *   EXA_API_KEY=... cline "Search the web for recent TypeScript 6 updates"
  *
  * Provider key:

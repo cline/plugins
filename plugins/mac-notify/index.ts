@@ -4,7 +4,7 @@
  * Sends a Notification Center alert when a Cline run completes successfully.
  *
  * CLI usage:
- *   cline plugin install https://github.com/cline/cline/blob/main/sdk/examples/plugins/mac-notify.ts --cwd .
+ *   cline plugin install mac-notify
  *   cline -i "Run the test suite"
  */
 
