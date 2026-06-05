@@ -13,15 +13,14 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | Plugin | What it adds |
 | --- | --- |
 | `agents-squad` | Background subagents with presets, skills, and shared handoffs. |
-| `automation-events` | Demo automation events emitted from a plugin. |
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
 | `bundled-skills-demo` | A package plugin that proves bundled skill discovery works. |
 | `custom-compaction` | Provider message compaction through a plugin message builder. |
-| `data-analyst` | ClickHouse data analyst skill with supporting analysis and ClickHouse sub-skills. |
+| `clickhouse-data-analyst` | ClickHouse data analyst skill with supporting analysis and ClickHouse sub-skills. |
 | `env-blocker` | A hook that blocks reads of secret `.env` files. |
 | `gitignore-read-files-guard` | A hook that blocks file access to `.gitignore` ignored paths. |
-| `intercom-support-triage` | Intercom conversation triage tools for support workflows. |
+| `intercom-support-triage-slack` | Intercom conversation triage tools for support workflows. |
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
