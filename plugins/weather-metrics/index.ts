@@ -11,9 +11,6 @@
  * CLI usage:
  *   cline plugin install weather-metrics
  *   cline -i "What's the weather like in Tokyo and Paris?"
- *
- * Direct demo usage:
- *   ANTHROPIC_API_KEY=sk-... bun run examples/plugins/weather-metrics.ts
  */
 
 import { type AgentPlugin, createTool } from "@cline/core";

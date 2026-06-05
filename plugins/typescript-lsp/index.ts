@@ -11,9 +11,6 @@
  * CLI usage:
  *   cline plugin install typescript-lsp
  *   cline -i "Find where createTool is defined"
- *
- * Direct demo usage:
- *   ANTHROPIC_API_KEY=sk-... bun run examples/plugins/typescript-lsp/index.ts
  */
 
 import { existsSync } from "node:fs";
