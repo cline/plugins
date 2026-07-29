@@ -1,11 +1,20 @@
 ---
 name: clickhouse
-description: Connect to and query ClickHouse (a local server or a ClickHouse Cloud service) from the terminal using the official clickhousectl CLI, including the browser OAuth login flow. Use when the user wants to run SQL against ClickHouse, explore schemas and tables, inspect Cloud services, or authenticate clickhousectl. For building a local dev environment or deploying to Cloud, defer to the official ClickHouse skills (see Scope).
+description: Connect to and query ClickHouse (a local server or a ClickHouse Cloud service) from the terminal. For ClickHouse Cloud analytics, use the configured direct ClickHouse Query API endpoint with per-user CH_API_KEY and CH_API_SECRET credentials; do not use clickhousectl cloud service query. For local or host/port servers, use clickhousectl local client. Use when the user wants to run SQL against ClickHouse, explore schemas and tables, inspect Cloud services, or authenticate. For building a local dev environment or deploying to Cloud, defer to the official ClickHouse skills (see Scope).
 ---
 
-# ClickHouse via clickhousectl
+# ClickHouse Connection and Queries
 
-Connect to ClickHouse and run queries using `clickhousectl`, the official ClickHouse CLI. This skill covers the parts a data analyst needs: authenticating, pointing at the right server, and running safe SQL. It does not use the ClickHouse MCP server; everything goes through the CLI.
+Pick the right access path for the target:
+
+| Target | Path |
+| ------ | ---- |
+| ClickHouse Cloud analytics | Configured direct ClickHouse Query API endpoint with per-user `CH_API_KEY` / `CH_API_SECRET` |
+| Local server or any host/port | `clickhousectl local client` |
+
+Do not use `clickhousectl cloud service query` for Cloud analytics. It depends on locally stored service-query-key state and may auto-provision keys, which causes key sprawl and inconsistent behavior across machines.
+
+This skill does not use the ClickHouse MCP server.
 
 ## Scope
 
@@ -18,7 +27,112 @@ This skill is for connecting and querying. For these other flows, use the bundle
 
 These are vendored from https://github.com/ClickHouse/agent-skills (Apache-2.0). They can also be installed standalone with `clickhousectl skills` or `npx skills add clickhouse/agent-skills`.
 
-## Step 1: Ensure clickhousectl is installed
+---
+
+## Path A: ClickHouse Cloud - direct Query API with per-user key
+
+Use the configured direct ClickHouse Query API endpoint with the user's per-user ClickHouse Cloud API key. This is the required Cloud path for the Data Analyst skill. It avoids `clickhousectl cloud service query`, local service-query-key state, automatic key provisioning, and key sprawl.
+
+The Query API endpoint is team-managed and should be authorized for each `data-agent-<username>` API key with a read-only database role. Users should only need to store their own key ID and secret locally.
+
+### Credentials
+
+Read from the local environment:
+
+```bash
+CH_API_KEY    # required - per-user ClickHouse Cloud API key ID
+CH_API_SECRET # required - per-user ClickHouse Cloud API key secret
+```
+
+If `CH_API_KEY` or `CH_API_SECRET` is missing, stop and tell the user:
+
+```text
+Missing ClickHouse Query API credentials.
+Set CH_API_KEY and CH_API_SECRET in your local environment.
+Use your per-user data-agent-<username> ClickHouse Cloud API key.
+Do not paste secrets into chat and do not use a shared org-wide key.
+```
+
+Never print `CH_API_SECRET`.
+
+### Endpoint
+
+Use the configured Prod Query API endpoint for this skill. Do not ask each user to create their own endpoint or use `clickhousectl cloud service query`.
+
+```bash
+CH_QUERY_ENDPOINT="https://queries.clickhouse.cloud/service/b14c43d1-44f9-4446-ae00-483bcbc6952a/run"
+```
+
+Keep endpoint configuration separate from user credentials. `CH_API_KEY` / `CH_API_SECRET` identify who is calling; the endpoint's database role controls what SQL can run.
+
+### Running queries
+
+```bash
+curl -X POST -s \
+  --user "$CH_API_KEY:$CH_API_SECRET" \
+  "$CH_QUERY_ENDPOINT?format=JSONEachRow" \
+  -H 'Content-Type: application/json' \
+  -d '{ "sql": "SELECT 1 AS ok" }'
+```
+
+Connectivity check:
+
+```bash
+curl -X POST -s \
+  --user "$CH_API_KEY:$CH_API_SECRET" \
+  "$CH_QUERY_ENDPOINT?format=JSONEachRow" \
+  -H 'Content-Type: application/json' \
+  -d '{ "sql": "SELECT 1 AS ok" }'
+# Expected: {"ok":1}
+```
+
+Schema access check:
+
+```bash
+curl -X POST -s \
+  --user "$CH_API_KEY:$CH_API_SECRET" \
+  "$CH_QUERY_ENDPOINT?format=JSONEachRow" \
+  -H 'Content-Type: application/json' \
+  -d '{ "sql": "SHOW DATABASES" }'
+```
+
+Output format: `JSONEachRow` - parse line-by-line; each non-empty line is a JSON object.
+
+### Read-only guardrails (defense-in-depth)
+
+Before sending any query, check that the first SQL token is not one of:
+
+```text
+INSERT, ALTER, DROP, TRUNCATE, CREATE, DELETE, SYSTEM, OPTIMIZE, RENAME, GRANT, REVOKE
+```
+
+If it is, refuse. The real enforcement layer is the read-only database role configured on the Query API endpoint - client-side checks are defense-in-depth only.
+
+### Error handling
+
+| HTTP status | Likely cause | Action |
+| ----------- | ------------ | ------ |
+| `200` with `{"ok":1}` | Success | Proceed |
+| 401 | Wrong key ID or secret; extra whitespace; key disabled | Re-check local credentials |
+| 403 | Key is not authorized on the endpoint; IP allowlist; database role denial | Confirm the user's key is authorized on the Prod Query API endpoint |
+| 4xx/5xx | Query error or service issue | Surface full error body to user, with secrets redacted |
+
+Surface the full HTTP status and response body on errors, but redact secrets. Do not retry silently.
+
+### Credential policy
+
+- Use one per-user API key named `data-agent-<username>`.
+- Authorize that key on the Prod Query API endpoint.
+- Keep the endpoint database role read-only.
+- Do not use shared org-wide keys.
+- Do not rely on automatic `clickhousectl cloud service query` provisioning.
+- Rotate or revoke the user's key for offboarding.
+
+---
+
+## Path B: Local or host/port server - clickhousectl CLI
+
+### Step 1: Ensure clickhousectl is installed
 
 ```bash
 which clickhousectl
@@ -36,13 +150,9 @@ If the command is still not found after install, `~/.local/bin` is not on PATH f
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-## Step 2: Identify the target
+### Step 2: Identify the target
 
-Decide what you are querying before authenticating. There are three cases:
-
-- A local ClickHouse server managed by `clickhousectl` (started via `clickhousectl local server start`). Query it by name. No cloud auth needed.
-- Any reachable ClickHouse over host/port (local or remote). No cloud auth needed.
-- A ClickHouse Cloud service. Requires cloud authentication (Step 3).
+Decide what you are querying before connecting.
 
 List local servers and their ports:
 
@@ -50,66 +160,29 @@ List local servers and their ports:
 clickhousectl local server list
 ```
 
-## Step 3: Authenticate to ClickHouse Cloud (only for Cloud targets)
+### Step 3: Run queries
 
-Skip this entirely for local or host/port targets.
-
-`clickhousectl` has two cloud auth modes. The distinction matters:
-
-- OAuth login (browser device flow), read-only. The agent can run this directly; it opens the user's browser. It can list and inspect resources (orgs, services, service details) but cannot create, modify, or delete.
-
-  ```bash
-  clickhousectl cloud auth login
-  ```
-
-- API key login, read and write. Needed for any write, and also for running SQL via `cloud service query` on first use (see the note in Step 4). Keep the secret out of the chat: ask the user to run this in a separate terminal in the same directory, or set the env vars themselves.
-
-  ```bash
-  # Either: run in a separate terminal (keeps the secret out of this session)
-  clickhousectl cloud auth login --api-key <KEY> --api-secret <SECRET>
-
-  # Or: environment variables (good for scripts/agents)
-  export CLICKHOUSE_CLOUD_API_KEY=<KEY>
-  export CLICKHOUSE_CLOUD_API_SECRET=<SECRET>
-  ```
-
-If the user has no account yet, `clickhousectl cloud auth signup` opens the sign-up page.
-
-Verify auth and list what you can reach:
+Local named server (uses `clickhouse-client`):
 
 ```bash
-clickhousectl cloud auth status
-clickhousectl cloud org list
-clickhousectl cloud service list          # get the service name / id you will query
-```
-
-Credential resolution order: CLI flags > OAuth tokens > `.clickhousectl/credentials.json` > environment variables. Credentials are stored project-locally under `.clickhousectl/`.
-
-## Step 4: Run queries
-
-Prefer `--format` (e.g. `JSONEachRow`, `CSV`, `TabSeparated`) or `--json` when you need to parse results in a later step. SQL precedence for the query commands is `--query` > `--queries-file` > stdin.
-
-Cloud service (over HTTP, no local binary or service password required):
-
-```bash
-clickhousectl cloud service query --name <service> -q "SHOW DATABASES"
-clickhousectl cloud service query --id <service-id> -q "SELECT count() FROM events" --format JSONEachRow
-clickhousectl cloud service query --name <service> --database analytics --queries-file query.sql
-```
-
-Note on Cloud auth and querying: `cloud service query` uses a per-service query-endpoint API key that is auto-provisioned on first use and stored in `.clickhousectl/credentials.json`. Provisioning is a write, so a read-only OAuth login is not sufficient for the first query against a service. Use API key auth (Step 3) to run SQL, or pass `--no-auto-enable` to fail fast instead of attempting to provision. Once provisioned, later queries reuse the stored key.
-
-Local or host/port server (uses `clickhouse-client`):
-
-```bash
-clickhousectl local client --name <server> -q "SHOW TABLES"        # named local server
-clickhousectl local client --host myhost --port 9000 -q "SELECT 1"  # any reachable server
+clickhousectl local client --name <server> -q "SHOW TABLES"
+clickhousectl local client --name <server> -q "SELECT count() FROM events" --format JSONEachRow
 clickhousectl local client --name <server> --queries-file query.sql
 ```
 
+Any reachable host/port:
+
+```bash
+clickhousectl local client --host myhost --port 9000 -q "SELECT 1"
+```
+
+Prefer `--format` (e.g. `JSONEachRow`, `CSV`, `TabSeparated`) when you need to parse results in a later step. SQL precedence: `--query` > `--queries-file` > stdin.
+
+---
+
 ## Safe query practices
 
-Keep queries safe, explainable, and bounded.
+Keep queries safe, explainable, and bounded - regardless of which path you use.
 
 1. Discover schema/table shape if unknown: `SHOW DATABASES`, `SHOW TABLES`, `DESCRIBE TABLE <t>`.
 2. Draft SQL using documented definitions when available (see `../reading-data-dict/`).
@@ -125,7 +198,7 @@ Safety checks:
 - Filter by time window whenever possible.
 - Avoid `SELECT *` except tiny schema previews.
 - Check row counts before exporting large result sets.
-- Add `--json` or a `--format` for machine-readable output you intend to parse downstream.
+- Add `?format=JSONEachRow` for Cloud Query API calls, or `--format JSONEachRow` for `clickhousectl local client`, when you need machine-readable output downstream.
 
 ## Bounded queries and large tables
 
@@ -151,6 +224,7 @@ When returning query results, include:
 ## Auth and secret handling
 
 - Never print API keys, secrets, or passwords into the conversation or commit them.
-- Prefer the browser OAuth flow for read-only exploration; it puts no secret in the chat.
-- When write access or SQL querying requires an API key, prefer a separate terminal or environment variables over pasting the secret into this session.
-- `clickhousectl cloud auth logout` clears all saved credentials (OAuth tokens and API keys).
+- For Cloud analytics: use the configured direct Query API endpoint with explicit per-user `CH_API_KEY` / `CH_API_SECRET` credentials. If credentials are missing, stop and prompt the user to set them. Do not fall back to shared or default credentials.
+- Do not use `clickhousectl cloud service query` for Cloud analytics; it depends on local service-query-key state and may auto-provision keys.
+- For local servers: no cloud credentials needed.
+- `clickhousectl cloud auth logout` clears saved clickhousectl OAuth tokens and API keys, but does not manage the per-user `CH_API_KEY` / `CH_API_SECRET` environment variables.

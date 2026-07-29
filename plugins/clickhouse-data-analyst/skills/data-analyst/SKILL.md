@@ -7,7 +7,12 @@ description: Act as an interactive data analyst for ClickHouse-backed analytics.
 
 Act as an interactive data analyst over ClickHouse. The job is not to run the first query you can think of; it is to figure out the question the user actually has, answer it with a correct and bounded query, and report the definitions and caveats behind the number.
 
-CRITICAL: this skill never uses ClickHouse MCP tools. All database connections, queries, schema discovery, and data access go through the `clickhousectl` CLI (`skills/clickhouse/`). If ClickHouse MCP tools (`mcp-clickhouse__*`) are available in the environment, ignore them completely. Always run queries via `clickhousectl local client` or `clickhousectl cloud service query`.
+CRITICAL: this skill never uses ClickHouse MCP tools. All queries go through the paths defined in `skills/clickhouse/`:
+
+- ClickHouse Cloud analytics: use the configured direct ClickHouse Query API endpoint with per-user credentials (`CH_API_KEY` / `CH_API_SECRET`). Do not use `clickhousectl cloud service query`; it depends on local service-query-key state and may auto-provision keys.
+- Local or host/port server: use `clickhousectl local client`.
+
+If ClickHouse MCP tools (`mcp-clickhouse__*`) are available in the environment, ignore them completely.
 
 Sub-skills live in `skills/`. Load only the sub-skill directory needed for the current step, then follow that directory's `SKILL.md`. Referenced paths are relative to this skill directory (`<skill-path>/skills/data-analyst/`), not the user's workspace. For example, read plotting guidance at `<skill-path>/skills/data-analyst/skills/plotting/SKILL.md`.
 
@@ -15,7 +20,7 @@ Sub-skills live in `skills/`. Load only the sub-skill directory needed for the c
 
 Authored for this analyst workflow:
 
-- `skills/clickhouse/` - connect to ClickHouse (local or ClickHouse Cloud) via the `clickhousectl` CLI and run safe, bounded queries. Load before executing any SQL.
+- `skills/clickhouse/` - connect to ClickHouse Cloud via the configured direct Query API endpoint with per-user API key/secret credentials, or to local/host-port servers via `clickhousectl local client`. Load before executing any SQL.
 - `skills/reading-data-dict/` - resolve business and product terms to concrete models, columns, and metric definitions when the project documents its data (dbt repo, data dictionary, model docs).
 - `skills/steering-user-elicitation/` - fill the Intent block well, phrase good pushback, and handle metrics that are missing or commonly misunderstood.
 - `skills/analyzer/` - turn query results into trends, comparisons, distributions, funnels, sanity checks, and report-ready findings.
@@ -76,7 +81,7 @@ Elicitation is an invariant, not just step 1. At any step, if a new ambiguity su
 
 ## Core rules
 
-- Never use ClickHouse MCP tools. All SQL execution goes through the `clickhousectl` CLI as described in `skills/clickhouse/`. Do not call `mcp-clickhouse__run_query`, `mcp-clickhouse__list_databases`, `mcp-clickhouse__list_tables`, or any other ClickHouse MCP function, even if they are available in the environment.
+- Never use ClickHouse MCP tools. Do not call `mcp-clickhouse__run_query`, `mcp-clickhouse__list_databases`, `mcp-clickhouse__list_tables`, or any other ClickHouse MCP function, even if they are available in the environment. For ClickHouse Cloud analytics, use the configured direct Query API endpoint with per-user `CH_API_KEY` / `CH_API_SECRET` credentials as described in `skills/clickhouse/`. For local servers, use `clickhousectl local client`. Do not use `clickhousectl cloud service query` for Cloud analytics.
 - Prefer curated, documented models and metrics over raw event or log tables.
 - State the definitions, filters, time window, and assumptions used.
 - Start with schema discovery, previews, or aggregates before broad result dumps.
