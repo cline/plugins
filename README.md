@@ -31,6 +31,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `mac-notify` | macOS notifications when a Cline run completes. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
 | `speak` | Speaks completed Cline replies with ElevenLabs text to speech. |
+| `twilio` | Twilio and SendGrid workflow skills plus the Twilio docs MCP. |
 | `typescript-lsp` | TypeScript language service `goto_definition` support. |
 | `weather-metrics` | Demo weather tool plus runtime metrics hooks. |
 | `web-search` | Exa-backed web search as a Cline tool. |
