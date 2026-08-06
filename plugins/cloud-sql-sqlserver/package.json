@@ -1,0 +1,19 @@
+{
+  "name": "cloud-sql-sqlserver",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin for Cloud SQL for SQL Server administration, data, lifecycle, and monitoring skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
