@@ -1,0 +1,19 @@
+{
+  "name": "42crunch-api-security-testing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles 42Crunch API security testing skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
