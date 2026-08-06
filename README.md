@@ -30,6 +30,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
+| `qdrant` | Qdrant vector search skills for scaling, search quality, monitoring, deployment, migrations, upgrades, and SDK usage. |
 | `speak` | Speaks completed Cline replies with ElevenLabs text to speech. |
 | `typescript-lsp` | TypeScript language service `goto_definition` support. |
 | `weather-metrics` | Demo weather tool plus runtime metrics hooks. |

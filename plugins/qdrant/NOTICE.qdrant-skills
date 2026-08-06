@@ -1,0 +1,10 @@
+Qdrant skill content
+
+This plugin includes Qdrant skill material adapted for the Cline plugin
+ecosystem. The original material is copyright 2026 Qdrant Solutions GmbH
+and licensed under Apache License 2.0.
+
+Adaptations for this plugin include Cline package metadata, removal of source
+marketplace installation instructions, normalization of markdown formatting,
+and conversion of nested drill-down skills into linked reference documents so
+Cline exposes a smaller set of primary skills.
