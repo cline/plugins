@@ -1,0 +1,23 @@
+{
+	"name": "muse-code-harness",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Cline plugin that injects rigorous engineering conventions into the system prompt: derive the contract from call sites and existing tests, weigh edge cases like the happy path, reproduce before fixing, and verify with the project's real test suite.",
+	"cline": {
+		"plugins": [
+			{
+				"paths": ["./index.ts"],
+				"capabilities": ["rules"]
+			}
+		]
+	},
+	"peerDependencies": {
+		"@cline/core": "*"
+	},
+	"peerDependenciesMeta": {
+		"@cline/core": {
+			"optional": true
+		}
+	}
+}
