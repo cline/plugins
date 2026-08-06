@@ -1,0 +1,20 @@
+{
+  "name": "aws-startup-advisor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles startup-focused AWS skills and registers AWS knowledge and pricing MCP servers.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}
