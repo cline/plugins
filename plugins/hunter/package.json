@@ -1,0 +1,20 @@
+{
+  "name": "hunter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles Hunter prospecting skills and the Hunter MCP server.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills",
+          "mcp"
+        ]
+      }
+    ]
+  }
+}
