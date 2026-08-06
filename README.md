@@ -29,6 +29,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `intercom-support-triage-slack` | Intercom conversation triage tools for support workflows. |
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
+| `miro` | Miro MCP plus board browsing, diagrams, documents, tables, spec extraction, and visual review skills. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
 | `speak` | Speaks completed Cline replies with ElevenLabs text to speech. |
 | `typescript-lsp` | TypeScript language service `goto_definition` support. |
