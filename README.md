@@ -27,6 +27,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `gitignore-read-files-guard` | A hook that blocks file access to `.gitignore` ignored paths. |
 | `goal` | Completion nudges for active goals with a slash command and completion tool. |
 | `intercom-support-triage-slack` | Intercom conversation triage tools for support workflows. |
+| `jfrog` | JFrog Platform and package safety workflow skills. |
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
