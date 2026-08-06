@@ -34,6 +34,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `typescript-lsp` | TypeScript language service `goto_definition` support. |
 | `weather-metrics` | Demo weather tool plus runtime metrics hooks. |
 | `web-search` | Exa-backed web search as a Cline tool. |
+| `zoom` | Zoom integration skills for APIs, SDKs, webhooks, OAuth, and MCP planning. |
 
 ## Install From Source
 
