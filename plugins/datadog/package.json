@@ -1,0 +1,20 @@
+{
+  "name": "datadog",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Datadog MCP plugin with setup, domain, and toolset workflow skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}
