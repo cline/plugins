@@ -8,4 +8,5 @@ coverage/
 !.env.example
 *.log
 .cline/
-
+__pycache__/
+*.pyc
