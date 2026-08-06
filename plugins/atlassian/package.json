@@ -1,0 +1,20 @@
+{
+  "name": "atlassian",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Atlassian Rovo MCP and skills for Jira, Confluence, and Compass workflows.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}
