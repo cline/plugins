@@ -1,0 +1,20 @@
+{
+  "name": "sagemaker-ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles SageMaker AI model customization and HyperPod operations skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills",
+          "mcp"
+        ]
+      }
+    ]
+  }
+}

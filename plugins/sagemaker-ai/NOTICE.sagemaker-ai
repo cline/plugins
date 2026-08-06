@@ -1,0 +1,11 @@
+SageMaker AI plugin
+
+This plugin includes SageMaker AI workflow skill materials originally published
+by Amazon Web Services as part of the AWS agent plugins project.
+
+Upstream metadata:
+- Package name: sagemaker-ai
+- Version: 1.2.1
+- Author: Amazon Web Services
+- Repository: https://github.com/awslabs/agent-plugins
+- License: Apache-2.0
