@@ -1,0 +1,19 @@
+{
+	"name": "cloud-sql-postgresql",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Cline plugin for Cloud SQL for PostgreSQL administration, data, health, lifecycle, monitoring, replication, vector, and configuration skills.",
+	"cline": {
+		"plugins": [
+			{
+				"paths": [
+					"./index.ts"
+				],
+				"capabilities": [
+					"skills"
+				]
+			}
+		]
+	}
+}
