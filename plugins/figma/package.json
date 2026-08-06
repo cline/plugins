@@ -1,0 +1,28 @@
+{
+  "name": "figma",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Figma MCP and workflow skills for design context, Code Connect, canvas editing, diagrams, FigJam, and Slides.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  },
+  "peerDependencies": {
+    "@cline/sdk": "*"
+  },
+  "peerDependenciesMeta": {
+    "@cline/sdk": {
+      "optional": true
+    }
+  }
+}
