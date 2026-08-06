@@ -21,6 +21,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
 | `bundled-skills-demo` | A package plugin that proves bundled skill discovery works. |
+| `circle` | Circle MCP plus skills for USDC, wallets, Gateway, CCTP, x402, Arc, and smart contract workflows. |
 | `custom-compaction` | Provider message compaction through a plugin message builder. |
 | `clickhouse-data-analyst` | ClickHouse data analyst skill with supporting analysis and ClickHouse sub-skills. |
 | `env-blocker` | A hook that blocks reads of secret `.env` files. |

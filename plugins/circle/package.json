@@ -1,0 +1,20 @@
+{
+  "name": "circle",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin for Circle MCP, USDC, wallets, Gateway, CCTP, x402, Arc, and smart contract workflow skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}
