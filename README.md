@@ -18,6 +18,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | --- | --- |
 | `agent-browser` | Web and Electron browser automation via the agent-browser CLI skill. |
 | `agents-squad` | Background subagents with presets, skills, and shared handoffs. |
+| `atomic-agents` | Skills for building, exploring, and reviewing Python apps that use the Atomic Agents framework. |
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
 | `bundled-skills-demo` | A package plugin that proves bundled skill discovery works. |
