@@ -1,0 +1,19 @@
+{
+  "name": "auth0",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline skill pack for Auth0 application, API, tenant, migration, MFA, branding, and custom-domain workflows.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
