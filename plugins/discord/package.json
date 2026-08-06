@@ -1,0 +1,26 @@
+{
+  "name": "discord",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin for Discord bot workflows with MCP tools and access-control guidance.",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.0.0",
+    "discord.js": "14.26.4",
+    "tsx": "4.20.6",
+    "zod": "3.25.76"
+  },
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills",
+          "mcp"
+        ]
+      }
+    ]
+  }
+}
