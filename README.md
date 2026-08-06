@@ -23,6 +23,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `bundled-skills-demo` | A package plugin that proves bundled skill discovery works. |
 | `custom-compaction` | Provider message compaction through a plugin message builder. |
 | `clickhouse-data-analyst` | ClickHouse data analyst skill with supporting analysis and ClickHouse sub-skills. |
+| `duckdb` | DuckDB CLI skills for local files, remote object storage, docs lookup, sessions, and spatial analysis. |
 | `env-blocker` | A hook that blocks reads of secret `.env` files. |
 | `gitignore-read-files-guard` | A hook that blocks file access to `.gitignore` ignored paths. |
 | `goal` | Completion nudges for active goals with a slash command and completion tool. |
