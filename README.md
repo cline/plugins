@@ -26,6 +26,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `env-blocker` | A hook that blocks reads of secret `.env` files. |
 | `gitignore-read-files-guard` | A hook that blocks file access to `.gitignore` ignored paths. |
 | `goal` | Completion nudges for active goals with a slash command and completion tool. |
+| `imessage` | macOS iMessage history and reply tools with local allowlist access control. |
 | `intercom-support-triage-slack` | Intercom conversation triage tools for support workflows. |
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
