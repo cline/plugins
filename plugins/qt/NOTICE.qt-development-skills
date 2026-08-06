@@ -1,0 +1,9 @@
+This plugin adapts Qt Group's Qt AI Skills for use as a Cline plugin.
+
+Source project: https://github.com/TheQtCompanyRnD/agent-skills
+Source plugin: qt-development-skills
+Source license: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+The Cline plugin wrapper, MCP registration, README, and compatibility guidance
+are specific to this repository. Bundled skill and reference materials retain
+their original license notices.
