@@ -1,0 +1,19 @@
+{
+  "name": "clickhouse-best-practices",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline Cline skill pack for ClickHouse and chDB best practices.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
