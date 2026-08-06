@@ -1,0 +1,9 @@
+Cloud SQL for MySQL skills for Cline
+
+This plugin includes adapted guidance from the Cloud SQL for MySQL Agent
+Skills project by Google LLC:
+
+- https://github.com/gemini-cli-extensions/cloud-sql-mysql
+
+The adapted skill guidance is distributed under Apache-2.0. See
+LICENSE.cloud-sql-mysql in this directory.
