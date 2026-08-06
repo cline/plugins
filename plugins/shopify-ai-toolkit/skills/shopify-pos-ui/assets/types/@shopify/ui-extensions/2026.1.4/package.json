@@ -1,0 +1,173 @@
+{
+  "name": "@shopify/ui-extensions",
+  "version": "2026.1.4",
+  "scripts": {
+    "docs:admin": "node ./docs/surfaces/admin/build-docs.mjs",
+    "docs:checkout": "bash ./docs/surfaces/checkout/build-docs.sh",
+    "docs:point-of-sale": "node ./docs/surfaces/point-of-sale/build-docs.mjs",
+    "docs:customer-account": "node ./docs/surfaces/customer-account/build-docs.mjs"
+  },
+  "main": "index.js",
+  "module": "index.mjs",
+  "esnext": "index.esnext",
+  "types": "./build-files/ts/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "admin": [
+        "./build-files/ts/surfaces/admin.d.ts"
+      ],
+      "admin.*": [
+        "./build-files/ts/surfaces/admin/targets/admin.*"
+      ],
+      "admin/components/*": [
+        "./build-files/ts/surfaces/admin/components/*.d.ts"
+      ],
+      "checkout": [
+        "./build-files/ts/surfaces/checkout.d.ts"
+      ],
+      "checkout/preact": [
+        "./build-files/ts/surfaces/checkout/preact/index.d.ts"
+      ],
+      "purchase.*": [
+        "./build-files/ts/surfaces/checkout/targets/purchase.*"
+      ],
+      "customer-account": [
+        "./build-files/ts/surfaces/customer-account.d.ts"
+      ],
+      "customer-account.*": [
+        "./build-files/ts/surfaces/customer-account/targets/customer-account.*.d.ts"
+      ],
+      "customer-account/preact": [
+        "./build-files/ts/surfaces/customer-account/preact/index.d.ts"
+      ],
+      "point-of-sale": [
+        "./build-files/ts/surfaces/point-of-sale.d.ts"
+      ],
+      "pos.*": [
+        "./build-files/ts/surfaces/point-of-sale/targets/pos.*.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./build-files/ts/index.d.ts",
+      "esnext": "./index.esnext",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./admin": {
+      "types": "./build-files/ts/surfaces/admin.d.ts",
+      "esnext": "./build-files/esnext/surfaces/admin.esnext",
+      "import": "./build-files/esm/surfaces/admin.mjs",
+      "require": "./build-files/cjs/surfaces/admin.js"
+    },
+    "./admin.*": {
+      "default": "./build-files/ts/surfaces/admin/targets/admin.*.d.ts"
+    },
+    "./admin/components/*": {
+      "default": "./build-files/ts/surfaces/admin/components/*.d.ts"
+    },
+    "./checkout": {
+      "types": "./build-files/ts/surfaces/checkout.d.ts",
+      "esnext": "./build-files/esnext/surfaces/checkout.esnext",
+      "import": "./build-files/esm/surfaces/checkout.mjs",
+      "require": "./build-files/cjs/surfaces/checkout.js"
+    },
+    "./checkout/preact": {
+      "types": "./build-files/ts/surfaces/checkout/preact/index.d.ts",
+      "esnext": "./build-files/esnext/surfaces/checkout/preact/index.esnext",
+      "import": "./build-files/esm/surfaces/checkout/preact/index.mjs",
+      "require": "./build-files/cjs/surfaces/checkout/preact/index.js"
+    },
+    "./purchase.*": {
+      "default": "./build-files/ts/surfaces/checkout/targets/purchase.*.d.ts"
+    },
+    "./customer-account": {
+      "types": "./build-files/ts/surfaces/customer-account.d.ts",
+      "esnext": "./build-files/esnext/surfaces/customer-account.esnext",
+      "import": "./build-files/esm/surfaces/customer-account.mjs",
+      "require": "./build-files/cjs/surfaces/customer-account.js"
+    },
+    "./customer-account.*": {
+      "default": "./build-files/ts/surfaces/customer-account/targets/customer-account.*.d.ts"
+    },
+    "./customer-account/preact": {
+      "types": "./build-files/ts/surfaces/customer-account/preact/index.d.ts",
+      "esnext": "./build-files/esnext/surfaces/customer-account/preact/index.esnext",
+      "import": "./build-files/esm/surfaces/customer-account/preact/index.mjs",
+      "require": "./build-files/cjs/surfaces/customer-account/preact/index.js"
+    },
+    "./point-of-sale": {
+      "types": "./build-files/ts/surfaces/point-of-sale.d.ts",
+      "esnext": "./build-files/esnext/surfaces/point-of-sale.esnext",
+      "import": "./build-files/esm/surfaces/point-of-sale.mjs",
+      "require": "./build-files/cjs/surfaces/point-of-sale.js"
+    },
+    "./pos.*": {
+      "default": "./build-files/ts/surfaces/point-of-sale/targets/pos.*.d.ts"
+    },
+    "./point-of-sale/preact": {
+      "types": "./build-files/ts/surfaces/point-of-sale/preact.d.ts",
+      "esnext": "./build-files/esnext/surfaces/point-of-sale/preact.esnext",
+      "import": "./build-files/esm/surfaces/point-of-sale/preact.mjs",
+      "require": "./build-files/cjs/surfaces/point-of-sale/preact.js"
+    },
+    "./preact": {
+      "types": "./build-files/ts/preact.d.ts",
+      "esnext": "./build-files/esnext/preact.esnext",
+      "import": "./build-files/esm/preact.mjs",
+      "require": "./build-files/cjs/preact.js"
+    }
+  },
+  "license": "MIT",
+  "sideEffects": [
+    "./build-files/esnext/preact.esnext",
+    "./build-files/esm/preact.mjs",
+    "./build-files/cjs/preact.js"
+  ],
+  "devDependencies": {
+    "@remote-ui/async-subscription": "^2.1.16",
+    "@shopify/generate-docs": "1.2.2",
+    "@quilted/react-testing": "^0.6.11",
+    "typescript": "^4.9.0",
+    "@faker-js/faker": "^8.4.1",
+    "preact": "^10.10.x",
+    "@preact/signals": "^2.3.x"
+  },
+  "peerDependencies": {
+    "preact": "*",
+    "@preact/signals": "*"
+  },
+  "peerDependenciesMeta": {
+    "preact": {
+      "optional": true
+    },
+    "@preact/signals": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/ui-extensions.git",
+    "directory": "packages/ui-extensions"
+  },
+  "files": [
+    "build",
+    "src",
+    "!*.doc.ts",
+    "index.*",
+    "README.md"
+  ],
+  "eslintConfig": {
+    "rules": {
+      "@shopify/strict-component-boundaries": "off"
+    }
+  },
+  "dependencies": {
+    "ts-morph": "^25.0.1"
+  }
+}
