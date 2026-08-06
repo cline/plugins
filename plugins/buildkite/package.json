@@ -1,0 +1,20 @@
+{
+  "name": "buildkite",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin for Buildkite MCP, pipeline, preflight, CLI, API, migration, and agent-runtime workflows.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}
