@@ -1,0 +1,19 @@
+{
+  "name": "duende",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles Duende IdentityServer, OAuth, OIDC, BFF, and ASP.NET Core security skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}

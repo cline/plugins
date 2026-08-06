@@ -1,0 +1,11 @@
+This plugin includes adapted guidance from duende-skills by Duende Software,
+licensed under MIT.
+
+Source repository: https://github.com/DuendeSoftware/duende-skills
+Source plugin version: 0.1.0
+
+duende-skills is based in part on dotnet-skills by Aaron Stannard.
+
+The Cline plugin consolidates the source skill set into Cline-native workflow
+skills and omits source agent profile files, tests, release automation, and
+tool-specific installation instructions.
