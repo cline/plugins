@@ -1,0 +1,20 @@
+{
+  "name": "aws-dev-toolkit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles AWS development workflow skills and registers AWS knowledge, IaC, and pricing MCP servers.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}

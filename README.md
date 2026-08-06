@@ -18,6 +18,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | --- | --- |
 | `agent-browser` | Web and Electron browser automation via the agent-browser CLI skill. |
 | `agents-squad` | Background subagents with presets, skills, and shared handoffs. |
+| `aws-dev-toolkit` | AWS development toolkit with knowledge, IaC, pricing MCP servers and curated architecture workflow skills. |
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
 | `bundled-skills-demo` | A package plugin that proves bundled skill discovery works. |
