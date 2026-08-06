@@ -1,0 +1,47 @@
+---
+description: Forge authentication and authorization rules index. Auto-attached for forge-authn-authz/
+globs:
+  - forge-authn-authz/
+alwaysApply: false
+---
+
+- Scope: Authentication mechanisms, authorization checks, privilege boundaries, and access control in Forge apps.
+- Priority: Broken Authentication and Session Management is the #1 bug bounty category (~43% of submissions).
+
+Key Forge AuthN/AuthZ Risks
+
+- `asApp()` vs `asUser()` privilege escalation: asApp has broader permissions than asUser; missing authz checks before asApp calls.
+- Display conditions are NOT authorization: Display conditions only hide UI; attackers can invoke modules directly via GraphQL.
+- Web triggers lack built-in auth: Must implement custom authentication and validation.
+- Resolver-side authorization missing: Client-provided context is untrusted; all sensitive actions require server-side checks.
+- Forge context manipulation: Elements of context can be attacker-controlled (EPSP-300).
+
+Subrules
+
+- asApp Privilege Escalation -> `@forge-authn-authz/asapp-privilege-escalation.mdc`
+- Prefer Using Function Context Object -> `@forge-authn-authz/prefer-context-authz.mdc`
+- Missing Resolver Authorization -> `@forge-authn-authz/missing-resolver-authz.mdc`
+- Display Conditions Bypass -> `@forge-authn-authz/display-conditions-bypass.mdc`
+<!-- - Web Trigger Authentication -> `@forge-authn-authz/webtrigger-auth.mdc`
+- IDOR and Object-Level AuthZ -> `@forge-authn-authz/idor-object-authz.mdc`
+- Forge Context Trust Boundaries -> `@forge-authn-authz/context-trust-boundaries.mdc` -->
+
+Detection Heuristics
+
+- Search for `asApp()` calls without preceding permission/role checks.
+- Identify resolvers that access/mutate data based solely on payload IDs without ownership validation.
+- Look for display conditions in manifest without corresponding resolver-side authorization.
+- Find web triggers without authentication header validation or signature checks.
+
+Dynamic Testing Tools
+
+- Direct GraphQL invocation to bypass UI
+- Multi-account testing for privilege boundaries
+
+CWE References
+
+- CWE-862: Missing Authorization
+- CWE-863: Incorrect Authorization
+- CWE-284: Improper Access Control
+- CWE-306: Missing Authentication for Critical Function
+

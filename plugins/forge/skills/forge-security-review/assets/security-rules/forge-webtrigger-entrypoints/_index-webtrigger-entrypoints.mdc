@@ -1,0 +1,64 @@
+---
+description: Forge web trigger and exposed entrypoints rules index. Auto-attached for forge-webtrigger-entrypoints/
+globs:
+  - forge-webtrigger-entrypoints/
+alwaysApply: false
+---
+
+- Scope: Web triggers, scheduled triggers, event handlers, and other externally-accessible Forge entrypoints.
+- Priority: Web triggers are unauthenticated URLs by default; major attack surface.
+
+Key Forge Entrypoint Risks
+
+- No built-in web trigger authentication: Forge does not provide authentication for web triggers; apps must implement their own.
+- Missing request validation: No signature verification, replay protection, or integrity checks.
+- Abuse protection gaps: No built-in rate limiting or throttling for web triggers.
+- Event handler trust: Assuming events come from trusted sources without validation.
+- Scheduled trigger data handling: Processing external data fetched by scheduled handlers.
+
+Subrules
+
+- Web Trigger Security -> `@forge-webtrigger-entrypoints/webtrigger-security.mdc`
+<!-- - Request Authentication -> `@forge-webtrigger-entrypoints/request-authentication.mdc`
+- Replay and Abuse Protection -> `@forge-webtrigger-entrypoints/replay-abuse-protection.mdc`
+- Event Handler Validation -> `@forge-webtrigger-entrypoints/event-handler-validation.mdc` -->
+
+Detection Heuristics
+
+- Identify all `webtrigger` modules in manifest.yml.
+- Check handler functions for authentication header validation (e.g., HMAC, shared secret).
+- Look for timestamp/nonce validation for replay protection.
+- Review event handlers for input validation before processing.
+
+Web Trigger Security Patterns
+
+```javascript
+// INSECURE - no authentication
+export async function handler(request) {
+  const body = JSON.parse(request.body);
+  await processData(body);  // Directly processing untrusted input
+  return { statusCode: 200 };
+}
+
+// SECURE - with authentication
+export async function handler(request) {
+  const signature = request.headers['x-signature'];
+  const timestamp = request.headers['x-timestamp'];
+  
+  if (!verifySignature(request.body, signature, SECRET)) {
+    return { statusCode: 401, body: 'Unauthorized' };
+  }
+  if (isReplayAttack(timestamp)) {
+    return { statusCode: 400, body: 'Request expired' };
+  }
+  // Process validated request
+}
+```
+
+CWE References
+
+- CWE-306: Missing Authentication for Critical Function
+- CWE-352: Cross-Site Request Forgery
+- CWE-799: Improper Control of Interaction Frequency
+- CWE-294: Authentication Bypass by Capture-replay
+

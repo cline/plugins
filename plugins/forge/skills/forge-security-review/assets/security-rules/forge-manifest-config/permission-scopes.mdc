@@ -1,0 +1,141 @@
+---
+description: Review Forge app permission scopes for least privilege and scope justification
+globs:
+alwaysApply: false
+---
+
+Context
+
+- Forge apps declare required scopes in `permissions.scopes` in manifest.yml. Excessive scopes violate least privilege and increase impact if the app is compromised.
+- Related CWE: CWE-269 (Improper Privilege Management), CWE-732 (Incorrect Permission Assignment).
+- Scope review is a key part of Marketplace security requirements.
+- Broad scopes risks are low severity issues
+
+Scope & Signals
+
+- Manifest location: `permissions.scopes[]`
+- Risk indicators:
+  - Scopes not used by any code path.
+  - Write scopes when only read is needed.
+  - Admin scopes for non-admin functionality.
+  - Broad scopes when narrow alternatives exist.
+
+Scope Categories
+
+```yaml
+# READ scopes (lower risk)
+- read:jira-work
+- read:confluence-content.all
+- read:me
+
+# WRITE scopes (higher risk)
+- write:jira-work
+- write:confluence-content.all
+
+# ADMIN scopes (highest risk)
+- manage:jira-configuration
+- manage:confluence-configuration
+
+# USER IMPERSONATION (special concern)
+- act:jira
+- act:confluence
+```
+
+Detection Process
+
+```
+1. Extract scopes from manifest.yml
+2. For each scope:
+   a. Search codebase for APIs requiring this scope
+   b. If no usage found -> flag as potentially unnecessary
+   c. If write scope -> verify write operations exist
+   d. If admin scope -> verify admin functionality
+3. Check for scope upgrades (read -> write -> admin)
+4. Verify scope justification in Marketplace listing
+```
+
+Analysis Patterns
+
+```javascript
+// Search for scope-requiring API patterns:
+
+// read:jira-work
+api.requestJira(route`/rest/api/3/issue/${issueId}`, { method: 'GET' })
+
+// write:jira-work
+api.requestJira(route`/rest/api/3/issue/${issueId}`, { method: 'PUT' })
+api.requestJira(route`/rest/api/3/issue`, { method: 'POST' })
+
+// read:confluence-content.all
+api.requestConfluence(route`/wiki/api/v2/pages/${pageId}`)
+
+// storage scopes
+storage.get(), storage.set()  // Requires storage:app
+
+// manage scopes
+api.requestJira(route`/rest/api/3/project`, { method: 'POST' })
+```
+
+Common Over-Privileged Patterns
+
+```yaml
+# OVER-PRIVILEGED - Write scope but only reads data
+permissions:
+  scopes:
+    - write:jira-work  # But code only calls GET endpoints
+    
+# OVER-PRIVILEGED - Admin scope for display-only feature
+permissions:
+  scopes:
+    - manage:jira-configuration  # Only reads config, doesn't manage
+
+# OVER-PRIVILEGED - Broad scope when specific exists
+permissions:
+  scopes:
+    - read:jira-work  # When only read:jira-work:issue needed
+```
+
+Detection Checklist
+
+- [ ] List all scopes from manifest.yml.
+- [ ] For each scope, grep for API calls requiring that scope.
+- [ ] Flag scopes with no corresponding API usage.
+- [ ] Check if write scopes could be replaced with read scopes.
+- [ ] Verify admin scopes are justified by admin functionality.
+- [ ] Compare against Marketplace listing scope justifications.
+- [ ] Note any scopes added but not yet used (future features?).
+
+Scope to API Mapping (Examples)
+
+| Scope | Required For |
+|-------|--------------|
+| `read:jira-work` | GET issue, search, project info |
+| `write:jira-work` | POST/PUT/DELETE issues, comments |
+| `read:confluence-content.all` | GET pages, spaces |
+| `write:confluence-content.all` | Create/update pages |
+| `storage:app` | Forge storage API |
+| `read:me` | Get current user info |
+
+PoC / Test Leads
+
+- Remove unused scope and verify app still functions.
+- Downgrade write to read scope and check for failures.
+- Map each API call to its required scope.
+
+Remediation Guidance (advisory)
+
+- Remove all scopes not required by actual code paths.
+- Downgrade write scopes to read where writes aren't performed.
+- Replace broad scopes with more specific alternatives.
+- Document justification for each remaining scope.
+- Implement scope review as part of deployment checklist.
+- Consider future features separately (add scopes when needed).
+
+Reporting Guidance
+
+- List all declared scopes with usage status.
+- Highlight unused or over-privileged scopes.
+- Provide specific downgrade recommendations.
+- Note impact of each unnecessary scope.
+- Map to CWE-269; reference least privilege principle.
+

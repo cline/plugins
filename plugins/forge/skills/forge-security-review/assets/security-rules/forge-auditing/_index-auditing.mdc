@@ -1,0 +1,47 @@
+---
+description: Forge auditing rules index (logging, error handling, SAST). Auto-attached for forge-auditing/
+globs:
+  - forge-auditing/
+alwaysApply: false
+---
+
+- Scope: Logging practices, error handling, static analysis tooling, and observability for Forge apps.
+
+Key Forge Auditing Concerns
+
+- Sensitive data in logs: Tokens, credentials, PII written to console or log outputs.
+- Verbose error messages: Stack traces or internal details exposed to users.
+- Missing security logging: Lack of audit trails for sensitive operations.
+- SAST tool configuration: Ensuring Forge-specific patterns are covered by scanners.
+
+Subrules
+
+- Logging Security -> `@forge-auditing/logging-security.mdc`
+- Error Handling -> `@forge-auditing/error-handling.mdc`
+- Static Analysis for Forge -> `@forge-auditing/static-analysis-forge.mdc`
+
+Detection Heuristics
+
+- Search for `console.log`, `console.error`, `logger.*` calls that include sensitive variable names.
+- Check error handlers for information leakage (stack traces, internal paths, query details).
+- Verify SAST configurations include Forge-specific rules (SQL API, storage, resolvers).
+
+SAST Tools for Forge
+
+- Semgrep: Custom rules for Forge patterns (sql.executeRaw, dangerouslySetInnerHTML, etc.)
+- FSRT: Forge Static Review Tool for AuthN/AuthZ and secrets scanning
+- Snyk: SCA for dependency vulnerabilities
+
+Forge-Specific Logging Concerns
+
+- Lambda logs are aggregated; ensure tenant context doesn't leak across log entries.
+- Forge provides built-in logging via `console`; review what's captured.
+- Error responses should not include internal implementation details.
+
+CWE References
+
+- CWE-778: Insufficient Logging
+- CWE-209: Information Exposure Through an Error Message
+- CWE-117: Improper Output Neutralization for Logs
+- CWE-532: Insertion of Sensitive Information into Log File
+

@@ -1,0 +1,108 @@
+---
+description: Review Forge app egress list for misleading entries
+globs:
+alwaysApply: false
+---
+
+Context
+
+- Forge apps are only permitted to `fetch()` or otherwise access domains declared in their manifest for this purpose
+- Network requests are actively blocked if the target domain does not match an entry in this list
+- The app manifest allows entries to specify not just a domain, but a full URI with protocol and path
+- There is divergent behavior between frontend and backend Forge app code:
+  - On frontend: the target URI must fully match an entry in the list
+  - On backend: the target domain, NOT the target URI, must match a domain in the list
+    - Entries that specify a protocol and path will only match the domain, the rest is ignored
+- Some apps rely on this permission list to skip input validation when dynamically constructing URIs in a request
+  - Since the behavior is unexpectedly less restrictive in the backend context, some network requests that the app expects are impossible may be allowed
+- This issue presents an easy way for an app to incorrectly prevent SSRF and SSRF-like VULNs
+
+Scope & Signals
+
+- Manifest location: `permissions.external`
+- Risk indicators:
+  - Any of the entries under this manifest key specify a URL protocol or URL path
+
+Detection Process
+
+```
+1. Extract all `address` keys from any of the transitive subkeys of this manifest path
+2. For each address:
+  - Check if the address specifies a URI protocol string
+  - Check if the address specifies a URI path
+  - Check if the address specifies a URI query string
+3. For each address that meets any of these conditions:
+  - Check if the domain from this URI is mentioned in a `fetch()` call or other network access (i.e. referenced in an html or JSX/TSX element attribute, XMLHTTPRequest, etc.)
+    - Check if this fetch call parameterizes the URI path
+    - Check if the parameterization is demonstrably static or not
+      - If static, this is safe. If there is ANY doubt if the parameterization originates from dynamic user input, this is not demonstrably safe.
+4. Each address that meets any of the conditions in (3) is a likely detection
+```
+
+Analysis Patterns
+
+```yml
+permissions:
+  external:
+    images:
+      - address: https://image.example.net/foo/commons/2/20/image.jpg
+      - address: https://image.example.net/foo/commons/2/20/image1.jpg
+    - address: ftp://an.example.domain.net/some/example/path.txt
+    - address: example-proto://an.example.domain.net/some/example/path.txt
+```
+
+```jsx
+// Search for fetch calls relying on permissions entries with URI protocols or paths
+
+// An example of a fetch call expecting the path to be checked
+const result = await fetch(
+  `https://image.example.net/foo/commons/2/20/${image_name}.jpg`
+);
+
+// An example of a fetch call that expects the protocol to be verified
+const result = await fetch(
+  `${selected_protocol}://an.example.domain.net/some/example/path.txt`
+);
+
+// An example of a SAFE parameterized fetch:
+if (selected_protocol == 'ftp' || selected_protocol == 'http') {
+  // The interpolated string has been explicitly checked, instead of relying on the manifest entries
+  const result = await fetch(
+    `${selected_protocol}://an.example.domain.net/some/example/path.txt`
+  );
+}
+
+// This is also a safe usage
+if (selected_protocol != 'ftp') {
+  throw new Error('');
+}
+
+// Because if the selected_protocol is not 'ftp', an exception is thrown and this is never reached
+const result = await fetch(
+  `${selected_protocol}://an.example.domain.net/some/example/path.txt`
+);
+
+// If validation would not filter out at least one of the possible values disallowed by the manifest, then it is
+// insufficient, and still indicates a likely reliance on the misunderstood behavior
+
+// An example of a SAFE usage
+// This usage is SAFE because no part of the protocol or path was parameterized, so the egress list is not
+// relied on
+// Note that this is not actually an interpolation, though it appears to be at first glance
+() => {
+  return (
+    <>
+      <img src={'https://image.example.net/foo/commons/2/20/${image_name}.jpg'}>
+    </>
+  );
+};
+```
+
+Reporting Guidance
+
+- Call out any usages of flagged URIs being used in ways similar to the analysis patterns
+  - If such a usage is safe, do not call it out. Only give a brief indication that the manifest
+    contains flagged URIs. DO NOT include the full URIs. Aim for brevity, not verbosity.
+- Explain that when accessing from the backend, all parts except the domain and port are ignored
+  - Therefore, the app MUST NOT expect the URI to be checked against the `permissions.external` address keys
+- This issue is not necessarily a vulnerability, BUT it is strong evidence of missing SSRF protections. Check if SSRF is actually present using your other relevant rules, and flag it if it is.

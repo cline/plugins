@@ -1,0 +1,49 @@
+---
+description: Forge manifest and platform configuration rules index. Auto-attached for forge-manifest-config/
+globs:
+  - forge-manifest-config/
+alwaysApply: false
+---
+
+- Scope: Manifest.yml configuration, permission scopes, CSP settings, runtime versions, and module definitions.
+- Priority: Manifest misconfigurations are foundational security issues affecting all app operations.
+
+Key Forge Manifest/Config Risks
+
+- Excessive permission scopes: Requesting more scopes than needed violates least privilege.
+- Unsafe CSP directives: `unsafe-inline`, `unsafe-eval` in `permissions.content.scripts`.
+- Deprecated Node.js runtime: Using EOL runtimes that lack security updates.
+- Overly permissive module access: Modules exposed without appropriate restrictions.
+- Missing data residency declarations: Required for certain compliance contexts.
+
+Subrules
+
+- Permission Scopes Review -> `@forge-manifest-config/permission-scopes.mdc`
+- Bad Practices with Egress Rule Entries -> `@forge-manifest-config/egress-url-entries.mdc`
+- Content Security Policy -> `@forge-manifest-config/content-security-policy.mdc`
+<!-- - Runtime Version Security -> `@forge-manifest-config/runtime-version.mdc`
+- Module Configuration -> `@forge-manifest-config/module-configuration.mdc` -->
+
+Detection Heuristics
+
+- Parse manifest.yml and list all declared scopes; compare against actual API usage.
+- Check `permissions.content.scripts` for `unsafe-inline` or `unsafe-eval`.
+- Verify `app.runtime.name` uses a supported, non-deprecated Node.js version.
+- Review module definitions for function bindings and access patterns.
+
+Manifest Review Checklist
+
+- [ ] All scopes are justified by actual API calls in code
+- [ ] No `unsafe-inline` or `unsafe-eval` in CSP (unless XSS mitigations documented)
+- [ ] Runtime version is current and supported
+- [ ] External permissions use explicit domains (no wildcards)
+- [ ] Web triggers have documented authentication strategy
+- [ ] Remotes have appropriate operations and auth configured
+
+CWE References
+
+- CWE-16: Configuration
+- CWE-732: Incorrect Permission Assignment
+- CWE-269: Improper Privilege Management
+- CWE-1188: Insecure Default Initialization of Resource
+

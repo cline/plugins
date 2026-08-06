@@ -1,0 +1,43 @@
+---
+description: Forge tenant isolation rules index. Auto-attached for forge-tenant-isolation/
+globs:
+  - forge-tenant-isolation/
+alwaysApply: false
+---
+
+- Scope: Multi-tenant data isolation, Lambda warm start risks, global state, and cross-tenant data leakage.
+- Priority: Critical for Marketplace apps serving multiple customers on shared infrastructure.
+
+Key Forge Tenant Isolation Risks
+
+- Lambda warm start behavior: AWS Lambda reuses runtime instances; global variables persist across invocations from different tenants.
+- Module-level state pollution: Caches, feature flags, and configuration stored at module scope can leak between tenants.
+- Storage key collisions: Improperly scoped storage keys can allow cross-tenant data access.
+- Cross-tenant API calls: `requestGraph` and `__requestAtlassian` historically enabled cross-tenant access.
+
+Subrules
+
+- Global State and Warm Start -> `@forge-tenant-isolation/global-state-warmstart.mdc`
+<!-- - Cache Isolation -> `@forge-tenant-isolation/cache-isolation.mdc`
+- Storage Key Scoping -> `@forge-tenant-isolation/storage-key-scoping.mdc`
+- Cross-Tenant API Risks -> `@forge-tenant-isolation/cross-tenant-api.mdc` -->
+
+Detection Heuristics
+
+- Identify module-level variables (`const cache = {}`, `let state = ...`) outside handler functions.
+- Search for caches that don't include tenant/installation context in keys.
+- Review storage operations for tenant-scoped key prefixes.
+- Check for user script execution that can access/modify global scope.
+
+Forge-Specific Caveats
+
+- RuntimeV2 uses AWS Lambda isolation instead of V1's custom sandbox, shifting tenant isolation responsibility to app developers.
+- User-supplied code execution (like JMCF scripted fields) in shared global scope is high risk.
+
+CWE References
+
+- CWE-668: Exposure of Resource to Wrong Sphere
+- CWE-200: Information Exposure
+- CWE-212: Improper Removal of Sensitive Information Before Storage or Transfer
+- CWE-1189: Improper Isolation of Shared Resources
+
