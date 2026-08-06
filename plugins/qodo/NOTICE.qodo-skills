@@ -1,0 +1,12 @@
+Qodo skill content
+
+This plugin includes workflow guidance adapted for the Cline plugin ecosystem
+from Qodo skill material. The original material is copyright 2025 Qodo Team
+and licensed under the MIT License.
+
+Source: https://github.com/qodo-ai/qodo-skills
+
+Adaptations for this plugin include Cline package metadata, a Cline safety
+rule, removal of source marketplace installation instructions, and
+consolidation of command-heavy provider workflows into explicit, user-approved
+skill guidance.

@@ -1,0 +1,19 @@
+{
+  "name": "qodo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Qodo review workflow skills with rule-search and PR feedback resolver references.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
