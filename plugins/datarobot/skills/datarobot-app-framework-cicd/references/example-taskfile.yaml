@@ -1,0 +1,46 @@
+---
+version: '3'
+dotenv:
+  - .env
+includes:
+  react:
+    taskfile: ./frontend_react/react_src/Taskfile.yaml
+    dir: ./frontend_react/react_src/
+tasks:
+  install:
+    desc:  Install all dependencies
+    cmds:
+      - uv venv .venv
+      - source .venv/bin/activate && uv pip install -r requirements.txt
+      - task: react:install
+
+  python-lint:
+    desc:  Lint Python code
+    cmds:
+      - ruff format .
+      - ruff check . --fix
+      - mypy --pretty .
+
+  python-lint-check:
+    desc:  Check Python linting without fixes
+    cmds:
+      - ruff format --check .
+      - ruff check .
+      - mypy --pretty .
+
+  lint:
+    deps:
+      - react:lint
+      - python-lint
+    desc:  Lint all code
+
+  lint-check:
+    deps:
+      - react:lint-check
+      - python-lint-check
+    desc:  Check linting for all code
+
+  test:
+    deps:
+      - react:test
+    desc:  Run all tests
