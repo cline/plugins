@@ -1,0 +1,19 @@
+{
+  "name": "hyperframes",
+  "version": "0.6.91",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles HyperFrames video composition and animation skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
