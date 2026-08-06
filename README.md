@@ -30,6 +30,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
+| `pigment` | Pigment planning, formula, modeling, board, view, import, and performance skills with optional Pigment MCP registration. |
 | `speak` | Speaks completed Cline replies with ElevenLabs text to speech. |
 | `typescript-lsp` | TypeScript language service `goto_definition` support. |
 | `weather-metrics` | Demo weather tool plus runtime metrics hooks. |
@@ -53,4 +54,6 @@ npm run validate
 
 ## License
 
-[Apache 2.0 © 2026 Cline Bot Inc.](./LICENSE)
+Most plugins in this repository are distributed under [Apache 2.0 © 2026 Cline Bot Inc.](./LICENSE).
+
+Some bundled third-party skill content has additional license terms. Check each plugin directory for plugin-specific license files, such as `plugins/pigment/LICENSE.pigment-skills`.
