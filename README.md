@@ -32,6 +32,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
 | `speak` | Speaks completed Cline replies with ElevenLabs text to speech. |
 | `typescript-lsp` | TypeScript language service `goto_definition` support. |
+| `vanta` | Vanta MCP servers plus compliance test remediation skills and commands. |
 | `weather-metrics` | Demo weather tool plus runtime metrics hooks. |
 | `web-search` | Exa-backed web search as a Cline tool. |
 
