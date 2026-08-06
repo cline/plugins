@@ -1,0 +1,19 @@
+{
+  "name": "postiz",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin with Postiz social media scheduling skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
