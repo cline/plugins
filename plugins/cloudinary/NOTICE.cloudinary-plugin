@@ -1,0 +1,10 @@
+Cloudinary plugin guidance
+
+Portions of the bundled skills are adapted from the Cloudinary plugin project by Cloudinary.
+
+Original project: https://github.com/cloudinary-devs/cloudinary-plugin
+Manifest version reviewed: 1.1.1
+
+Modified for Cline's plugin model with plugin-owned MCP registration, compact Cline skills, and Cline-specific safety guidance. The MediaFlows MCP endpoint is intentionally not registered because it requires user-managed static credential headers.
+
+License: MIT
