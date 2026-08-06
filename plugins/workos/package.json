@@ -1,0 +1,30 @@
+{
+  "name": "workos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WorkOS skills for AuthKit, SSO, Directory Sync, RBAC, Widgets, migrations, and identity platform operations.",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  },
+  "peerDependencies": {
+    "@cline/sdk": "*"
+  },
+  "peerDependenciesMeta": {
+    "@cline/sdk": {
+      "optional": true
+    }
+  }
+}
