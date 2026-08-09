@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate-plugins.mjs"
+    "validate": "node scripts/validate-plugins.mjs && node --test plugins/agents-squad/schema-portability.test.mjs"
   }
 }
-
