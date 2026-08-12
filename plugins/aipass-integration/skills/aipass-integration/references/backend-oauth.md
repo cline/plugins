@@ -18,7 +18,7 @@ Before requesting setup approval, determine the real callback route and include 
 
 AI Pass also binds each newly issued authorization code to the exact callback used for that flow, so the token request must send that same callback byte-for-byte after trimming outer whitespace. Path, query, case, encoding, port, and trailing slash are significant. The authorization server accepts PKCE `S256` only; never fall back to `plain`.
 
-For a localhost proof, use the actual `http://localhost` or `http://127.0.0.1` callback implemented by the project. Public deployments require exact HTTPS callbacks. If another deployment origin or route is needed later, start a new setup approval or have the owner update the client deliberately in Developer console → OAuth2 Clients, then re-test every callback. Never substitute a callback that the user did not approve.
+For a localhost proof, use the actual `http://localhost` or `http://127.0.0.1` callback implemented by the project. Public deployments require exact HTTPS callbacks. If another deployment origin or route is needed later, start a new setup approval or have the owner update the client deliberately in Developer console > OAuth2 Clients, then re-test every callback. Never substitute a callback that the user did not approve.
 
 ## Server-side broker
 

@@ -84,7 +84,7 @@ Cline uses the bundled references to select the smallest integration path. It mu
 
 ## Source, License, and Terms
 
-- Bundled source: `aipass-one/aipass-agent-plugin` release `v1.0.0`, commit `b5844a1f465d8d81fbe92de893edd9d1051afa05`.
+- Bundled source: `aipass-one/aipass-agent-plugin` release `v1.0.5`, commit `27bb3c15d63201eaff357e0b675b574ebc259fe5`; its integration skill is the reviewed AI Pass `v1.2.1` workflow.
 - Bundled AI Pass material is MIT-licensed; see `LICENSE.aipass-agent-plugin`.
 - The containing Cline plugin collection is Apache-2.0 licensed.
 - AI Pass terms: `https://aipass.one/terms-of-service`
