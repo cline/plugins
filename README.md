@@ -33,7 +33,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `speak` | Speaks completed Cline replies with ElevenLabs text to speech. |
 | `typescript-lsp` | TypeScript language service `goto_definition` support. |
 | `weather-metrics` | Demo weather tool plus runtime metrics hooks. |
-| `web-search` | Exa-backed web search as a Cline tool. |
+| `web-search` | Web search with free Parallel Search or a configured Exa API key. |
 
 ## Install From Source
 
