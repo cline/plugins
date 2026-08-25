@@ -1,15 +1,17 @@
 /**
  * Web Search Plugin Example
  *
- * Registers a `web_search` tool backed by Exa.
+ * Registers a `web_search` tool backed by Exa or free Parallel Search.
  *
  * CLI usage:
  *   cline plugin install web-search
+ *   cline "Search the web for recent TypeScript 6 updates"
  *   EXA_API_KEY=... cline "Search the web for recent TypeScript 6 updates"
  *
  * Provider key:
- *   EXA_API_KEY              Enables Exa search. A separate model provider key
- *                            is still required for CLI inference.
+ *   EXA_API_KEY              Enables Exa search when configured. Otherwise,
+ *                            anonymous Parallel Search is used. A separate
+ *                            model provider key may be needed for inference.
  */
 
 import { type AgentPlugin, createTool } from "@cline/core";
@@ -29,11 +31,11 @@ export interface WebSearchResult {
 	publishedAt?: string;
 	author?: string;
 	score?: number;
-	source: "exa";
+	source: "exa" | "parallel";
 }
 
 export interface WebSearchOutput {
-	provider: "exa";
+	provider: "exa" | "parallel";
 	query: string;
 	results: WebSearchResult[];
 	requestId?: string;
@@ -56,9 +58,31 @@ interface ExaSearchResponse {
 	error?: string;
 }
 
+interface ParallelSearchResult {
+	title?: string | null;
+	url?: string;
+	publish_date?: string | null;
+	excerpts?: string[];
+}
+
+interface ParallelSearchResponse {
+	search_id?: string;
+	results?: ParallelSearchResult[];
+}
+
+interface McpToolResponse {
+	error?: { message?: string };
+	result?: {
+		isError?: boolean;
+		structuredContent?: ParallelSearchResponse;
+		content?: Array<{ type?: string; text?: string }>;
+	};
+}
+
 const DEFAULT_RESULT_LIMIT = 5;
 const MAX_RESULT_LIMIT = 10;
 const EXA_SEARCH_ENDPOINT = "https://api.exa.ai/search";
+const PARALLEL_SEARCH_ENDPOINT = "https://search.parallel.ai/mcp";
 
 function env(name: string): string | undefined {
 	const value = process.env[name]?.trim();
@@ -129,9 +153,9 @@ function asNumber(value: unknown): number | undefined {
 		: undefined;
 }
 
-function hasResultUrl(
-	result: ExaSearchResult,
-): result is ExaSearchResult & { url: string } {
+function hasResultUrl<T extends { url?: string }>(
+	result: T,
+): result is T & { url: string } {
 	return typeof result.url === "string" && result.url.trim().length > 0;
 }
 
@@ -181,14 +205,6 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 	}
 
 	return body as T;
-}
-
-function resolveExaApiKey(): string {
-	const exaApiKey = env("EXA_API_KEY");
-	if (!exaApiKey) {
-		throw new Error("Set EXA_API_KEY to use web_search");
-	}
-	return exaApiKey;
 }
 
 async function searchExa(
@@ -250,6 +266,91 @@ async function searchExa(
 	};
 }
 
+async function searchParallel(
+	input: WebSearchInput,
+	limit: number,
+	domains: string[] | undefined,
+): Promise<WebSearchOutput> {
+	const objective = [input.query];
+	if (domains) {
+		objective.push(`Limit results to these domains: ${domains.join(", ")}.`);
+	}
+	if (
+		typeof input.recencyDays === "number" &&
+		Number.isFinite(input.recencyDays) &&
+		input.recencyDays > 0
+	) {
+		objective.push(
+			`Prefer results published within the last ${Math.trunc(input.recencyDays)} days.`,
+		);
+	}
+	if (input.country) {
+		objective.push(`Prefer results relevant to ${input.country.toLowerCase()}.`);
+	}
+
+	const domainQuery = domains?.map((domain) => `site:${domain}`).join(" OR ");
+	const searchQuery = domainQuery
+		? `${input.query} ${(domains?.length ?? 0) > 1 ? `(${domainQuery})` : domainQuery}`
+		: input.query;
+
+	const response = await fetch(PARALLEL_SEARCH_ENDPOINT, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Accept: "application/json, text/event-stream",
+		},
+		body: JSON.stringify({
+			jsonrpc: "2.0",
+			id: 1,
+			method: "tools/call",
+			params: {
+				name: "web_search",
+				arguments: {
+					objective: objective.join(" "),
+					search_queries: [searchQuery],
+				},
+			},
+		}),
+	});
+	const json = await readJsonResponse<McpToolResponse>(response);
+	if (json.error) {
+		throw new Error(json.error.message || "Parallel search failed");
+	}
+
+	const text = json.result?.content?.find((item) => item.type === "text")?.text;
+	if (json.result?.isError) {
+		throw new Error(text || "Parallel search failed");
+	}
+
+	let search = json.result?.structuredContent;
+	if (!search && text) {
+		try {
+			search = JSON.parse(text) as ParallelSearchResponse;
+		} catch {
+			throw new Error("Parallel returned invalid search results");
+		}
+	}
+	if (!search || !Array.isArray(search.results)) {
+		throw new Error("Parallel returned invalid search results");
+	}
+
+	return {
+		provider: "parallel",
+		query: input.query,
+		requestId: search.search_id,
+		results: search.results
+			.filter(hasResultUrl)
+			.slice(0, limit)
+			.map((result) => ({
+				title: result.title || result.url || "Untitled",
+				url: result.url,
+				snippet: truncateSnippet(result.excerpts?.join("\n")),
+				publishedAt: result.publish_date ?? undefined,
+				source: "parallel",
+			})),
+	};
+}
+
 export async function searchWeb(
 	input: WebSearchInput,
 ): Promise<WebSearchOutput> {
@@ -259,9 +360,11 @@ export async function searchWeb(
 
 	const limit = clampResultLimit(input.limit);
 	const domains = normalizeDomains(input.domains);
-	const apiKey = resolveExaApiKey();
+	const apiKey = env("EXA_API_KEY");
 
-	return searchExa(input, apiKey, limit, domains);
+	return apiKey
+		? searchExa(input, apiKey, limit, domains)
+		: searchParallel(input, limit, domains);
 }
 
 const plugin: AgentPlugin = {
@@ -275,9 +378,9 @@ const plugin: AgentPlugin = {
 			createTool({
 				name: "web_search",
 				description:
-					"Search the web for current public information using Exa. " +
+					"Search the web for current public information using Exa or Parallel. " +
 					"Use this to discover relevant URLs, news, docs, and recent facts; use fetch_web_content afterward when a page needs deeper inspection. " +
-					"Requires EXA_API_KEY in the plugin host environment.",
+					"Uses Exa when EXA_API_KEY is configured, or free Parallel Search otherwise.",
 				inputSchema: {
 					type: "object",
 					properties: {
@@ -299,7 +402,7 @@ const plugin: AgentPlugin = {
 						recencyDays: {
 							type: "number",
 							description:
-								"Optional freshness window in days. Maps to Exa startPublishedDate.",
+								"Optional freshness window in days. Maps to Exa startPublishedDate or guides Parallel search.",
 						},
 						country: {
 							type: "string",
