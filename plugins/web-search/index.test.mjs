@@ -46,9 +46,10 @@ test("uses anonymous Parallel MCP when no Exa key is configured", async (t) => {
 	const fetchMock = mockSearchEnvironment(t, undefined, (url, options) => {
 		assert.equal(url, "https://search.parallel.ai/mcp");
 		assert.equal(options.method, "POST");
-		assert.equal(options.headers["Content-Type"], "application/json");
-		assert.match(options.headers.Accept, /application\/json/);
-		assert.equal(options.headers.Authorization, undefined);
+		assert.deepEqual(options.headers, {
+			"Content-Type": "application/json",
+			Accept: "application/json",
+		});
 
 		const request = JSON.parse(options.body);
 		assert.equal(request.jsonrpc, "2.0");
@@ -61,6 +62,10 @@ test("uses anonymous Parallel MCP when no Exa key is configured", async (t) => {
 		assert.deepEqual(request.params.arguments.search_queries, [
 			"recent Cline releases site:github.com",
 		]);
+		assert.match(
+			request.params.arguments.session_id,
+			/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/,
+		);
 
 		return jsonResponse({
 			jsonrpc: "2.0",
@@ -120,6 +125,52 @@ test("uses anonymous Parallel MCP when no Exa key is configured", async (t) => {
 		],
 	});
 	assert.equal(fetchMock.mock.callCount(), 1);
+});
+
+test("reuses a stable session for anonymous Parallel searches", async (t) => {
+	const sessionIds = [];
+	mockSearchEnvironment(t, undefined, (_url, options) => {
+		const request = JSON.parse(options.body);
+		sessionIds.push(request.params.arguments.session_id);
+		return jsonResponse({
+			jsonrpc: "2.0",
+			id: request.id,
+			result: { structuredContent: { results: [] } },
+		});
+	});
+
+	await searchWeb({ query: "first search" });
+	await searchWeb({ query: "second search" });
+
+	assert.equal(sessionIds.length, 2);
+	assert.equal(sessionIds[0], sessionIds[1]);
+});
+
+test("enforces requested domains on Parallel search results", async (t) => {
+	mockSearchEnvironment(t, undefined, () =>
+		jsonResponse({
+			result: {
+				structuredContent: {
+					results: [
+						{ url: "https://example.com/first", excerpts: [] },
+						{ url: "https://example.com.attacker.test", excerpts: [] },
+						{ url: "not a valid URL", excerpts: [] },
+						{ url: "https://docs.example.com/second", excerpts: [] },
+					],
+				},
+			},
+		}),
+	);
+
+	const result = await searchWeb({
+		query: "example documentation",
+		domains: ["EXAMPLE.COM"],
+	});
+
+	assert.deepEqual(
+		result.results.map(({ url }) => url),
+		["https://example.com/first", "https://docs.example.com/second"],
+	);
 });
 
 test("preserves configured Exa requests, normalization, and provider priority", async (t) => {

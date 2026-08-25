@@ -14,6 +14,7 @@
  *                            model provider key may be needed for inference.
  */
 
+import { randomUUID } from "node:crypto";
 import { type AgentPlugin, createTool } from "@cline/core";
 
 export interface WebSearchInput {
@@ -83,6 +84,7 @@ const DEFAULT_RESULT_LIMIT = 5;
 const MAX_RESULT_LIMIT = 10;
 const EXA_SEARCH_ENDPOINT = "https://api.exa.ai/search";
 const PARALLEL_SEARCH_ENDPOINT = "https://search.parallel.ai/mcp";
+const PARALLEL_SESSION_ID = randomUUID();
 
 function env(name: string): string | undefined {
 	const value = process.env[name]?.trim();
@@ -157,6 +159,18 @@ function hasResultUrl<T extends { url?: string }>(
 	result: T,
 ): result is T & { url: string } {
 	return typeof result.url === "string" && result.url.trim().length > 0;
+}
+
+function hasAllowedDomain(url: string, domains: string[]): boolean {
+	try {
+		const hostname = new URL(url).hostname.toLowerCase();
+		return domains.some((domain) => {
+			const normalized = domain.toLowerCase();
+			return hostname === normalized || hostname.endsWith(`.${normalized}`);
+		});
+	} catch {
+		return false;
+	}
 }
 
 function parseWebSearchInput(input: unknown): WebSearchInput {
@@ -297,7 +311,7 @@ async function searchParallel(
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
-			Accept: "application/json, text/event-stream",
+			Accept: "application/json",
 		},
 		body: JSON.stringify({
 			jsonrpc: "2.0",
@@ -308,6 +322,7 @@ async function searchParallel(
 				arguments: {
 					objective: objective.join(" "),
 					search_queries: [searchQuery],
+					session_id: PARALLEL_SESSION_ID,
 				},
 			},
 		}),
@@ -340,6 +355,7 @@ async function searchParallel(
 		requestId: search.search_id,
 		results: search.results
 			.filter(hasResultUrl)
+			.filter((result) => !domains || hasAllowedDomain(result.url, domains))
 			.slice(0, limit)
 			.map((result) => ({
 				title: result.title || result.url || "Untitled",
