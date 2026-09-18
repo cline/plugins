@@ -1,0 +1,22 @@
+{
+  "allowedOrigins": [
+    "http://*",
+    "https://*"
+  ],
+  "headless": true,
+  "recordVideo": true,
+  "showCursor": true,
+  "showClickIndicators": true,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "stream": {
+    "enabled": false,
+    "intervalMs": 1000
+  },
+  "gateway": {
+    "apiKey": "",
+    "textModel": "google/gemini-2.5-flash-lite"
+  }
+}

@@ -1,0 +1,26 @@
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+*.log
+.DS_Store
+
+# Local configuration and credentials (keep the safe example)
+.env
+.env.*
+*.env
+cline-jev-browser.config.json
+cline-jev-browser.config.*.json
+!cline-jev-browser.config.example.json
+
+# Browser artifacts
+artifacts/
+test-results/
+playwright-report/
+playwright/.cache/
+screenshots/
+videos/
+*.webm
+*.jsonl
