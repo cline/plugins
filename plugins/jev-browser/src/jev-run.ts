@@ -31,6 +31,23 @@ export type RunStatus =
 	| "evaluation_limit"
 	| "interrupted";
 
+export type RunFailureCategory =
+	| "cancelled"
+	| "navigation_context"
+	| "timeout"
+	| "document_not_ready"
+	| "provider_error"
+	| "unexpected_error";
+
+export interface RunFailure {
+	stage: string;
+	category: RunFailureCategory;
+	/** HTTP status from the provider or gateway. */
+	providerStatus?: number;
+	/** Provider error code, for example customer_verification_required. */
+	providerType?: string;
+}
+
 export interface ActionHistory {
 	action: string;
 	kind: string;
@@ -85,7 +102,7 @@ export async function runJev(
 	let stage = "observation";
 	const textCache = new Map<string, string>();
 	const started = performance.now();
-	let failure: { stage: string; category: string } | undefined;
+	let failure: RunFailure | undefined;
 	const finish = (status: RunStatus, message: string) => ({
 		failure,
 		status,
@@ -263,6 +280,8 @@ export async function runJev(
 				: "Evaluation budget reached because decisions could not be executed. Inspect stale reasons in the trace.",
 		);
 	} catch (error) {
+		const provider = providerFailureDetails(error);
+		const hasProviderSignal = Object.keys(provider).length > 0;
 		failure = {
 			stage,
 			category: signal.aborted
@@ -274,15 +293,91 @@ export async function runJev(
 						: error instanceof Error &&
 								/createTreeWalker|JEV_DOCUMENT_NOT_READY/.test(error.message)
 							? "document_not_ready"
-							: "unexpected_error",
+							: hasProviderSignal
+								? "provider_error"
+								: "unexpected_error",
+			...provider,
 		};
+		const providerSummary = Object.values(provider).join(" ");
 		// Provider errors may contain request bodies. Keep keys, prompts, and field
-		// values out of tool errors. An attempted action may have taken effect.
+		// values out of tool errors; only the status and provider code are surfaced.
+		// An attempted action may have taken effect.
 		return finish(
 			"interrupted",
 			signal.aborted
 				? "Run cancelled or timed out. Inspect the page before any further actions."
-				: `Run failed during ${stage}${isNavigationReadError(error) ? " (document changed during observation)" : ""}. Inspect the page and trace; attempted actions may have taken effect and were not retried.`,
+				: `Run failed during ${stage}${
+						hasProviderSignal ? ` (provider ${providerSummary})` : ""
+					}${isNavigationReadError(error) ? " (document changed during observation)" : ""}. Inspect the page and trace; attempted actions may have taken effect and were not retried.`,
 		);
 	}
 }
+
+type UnknownRecord = Record<string, unknown>;
+
+// Provider bodies can echo request payloads, so only the HTTP status and the
+// provider's own short error code are extracted. Messages, raw bodies, and
+// request values never leave this function.
+function providerFailureDetails(error: unknown) {
+	let providerStatus: number | undefined;
+	let bodyType: string | undefined;
+	let genericType: string | undefined;
+	for (const link of errorChain(error)) {
+		if (
+			providerStatus === undefined &&
+			typeof link.statusCode === "number" &&
+			Number.isInteger(link.statusCode)
+		)
+			providerStatus = link.statusCode;
+		// The provider's own body code is more specific than the wrapper's `type`.
+		for (const body of [
+			asRecord(link.data),
+			parseJsonRecord(link.responseBody),
+		]) {
+			const providerError = asRecord(body?.error);
+			for (const candidate of [providerError?.type, providerError?.code])
+				if (bodyType === undefined && isProviderCode(candidate))
+					bodyType = candidate;
+		}
+		if (genericType === undefined && isProviderCode(link.type))
+			genericType = link.type;
+	}
+	const providerType = bodyType ?? genericType;
+	return {
+		...(providerStatus === undefined ? {} : { providerStatus }),
+		...(providerType === undefined ? {} : { providerType }),
+	};
+}
+
+// Walk cause links so the gateway wrapper and the underlying API error, which
+// carries the provider's own body, are both inspected.
+function errorChain(error: unknown): UnknownRecord[] {
+	const chain: UnknownRecord[] = [];
+	for (
+		let link = asRecord(error);
+		link && chain.length < 4;
+		link = asRecord(link.cause)
+	)
+		chain.push(link);
+	return chain;
+}
+
+function isProviderCode(value: unknown): value is string {
+	return typeof value === "string" && /^[a-z][a-z0-9_]{2,63}$/i.test(value);
+}
+
+function asRecord(value: unknown): UnknownRecord | undefined {
+	return typeof value === "object" && value !== null
+		? (value as UnknownRecord)
+		: undefined;
+}
+
+function parseJsonRecord(value: unknown): UnknownRecord | undefined {
+	if (typeof value !== "string") return undefined;
+	try {
+		return asRecord(JSON.parse(value));
+	} catch {
+		return undefined;
+	}
+}
+

@@ -46,7 +46,11 @@ Playwright timeout to settle after cancellation. Browser mutations are not retri
 
 Results include `status`, `steps`, `elapsedMs`, and a JSONL `tracePath`.
 Statuses are `done_unverified`, `blocked`, `needs_review`, `uncertain`,
-`step_limit`, `evaluation_limit`, or `interrupted`. An attempted action in a failed run might already
+`step_limit`, `evaluation_limit`, or `interrupted`. Failed runs also record a
+`stage` and a `category`; provider failures use `provider_error` and add the HTTP
+status and the provider's own error code (for example
+`403 customer_verification_required`) so the cause is actionable, while provider
+messages, response bodies, and request values are never surfaced. An attempted action in a failed run might already
 have taken effect: inspect before continuing. Traces record decisions (including terminal/rejected decisions), stale observations,
 action attempts, completion and the final result. Provider confidence is recorded
 separately when supplied. They omit generated field
