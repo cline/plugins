@@ -1,0 +1,19 @@
+{
+  "name": "hermoso",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles the Hermoso marketing skills: ad research, image and video ads, social posting and scheduling, and paid campaigns.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
