@@ -24,6 +24,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `custom-compaction` | Provider message compaction through a plugin message builder. |
 | `clickhouse-data-analyst` | ClickHouse data analyst skill with supporting analysis and ClickHouse sub-skills. |
 | `env-blocker` | A hook that blocks reads of secret `.env` files. |
+| `exa` | Exa MCP search, advanced search, page extraction, and research workflow guidance. |
 | `gitignore-read-files-guard` | A hook that blocks file access to `.gitignore` ignored paths. |
 | `goal` | Completion nudges for active goals with a slash command and completion tool. |
 | `intercom-support-triage-slack` | Intercom conversation triage tools for support workflows. |

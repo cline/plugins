@@ -1,0 +1,9 @@
+This plugin includes adapted guidance from exa-mcp-server by Exa Labs,
+licensed under MIT.
+
+Source repository: https://github.com/exa-labs/exa-mcp-server
+Source plugin version: 3.3.9
+
+The Cline plugin registers Exa's remote MCP endpoint and bundles a compact
+Cline-native research skill. It does not vendor or start the local npm MCP
+server package.
