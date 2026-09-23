@@ -1,0 +1,19 @@
+{
+  "name": "runway-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles Runway API media generation and app integration skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
