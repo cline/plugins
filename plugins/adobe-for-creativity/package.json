@@ -1,0 +1,20 @@
+{
+  "name": "adobe-for-creativity",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that registers Adobe Creative Cloud MCP tools and creative workflow skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}

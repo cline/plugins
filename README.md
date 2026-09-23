@@ -16,6 +16,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 
 | Plugin | What it adds |
 | --- | --- |
+| `adobe-for-creativity` | Adobe Creative Cloud MCP tools plus workflow skills for templates, resizing, social variants, quick cuts, batch photo edits, and portrait retouching. |
 | `agent-browser` | Web and Electron browser automation via the agent-browser CLI skill. |
 | `agents-squad` | Background subagents with presets, skills, and shared handoffs. |
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
