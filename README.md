@@ -29,6 +29,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `intercom-support-triage-slack` | Intercom conversation triage tools for support workflows. |
 | `jev-browser` | Fast browser goal execution with Jev through Vercel AI Gateway, screenshots, and isolated Chromium sessions. |
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
+| `lusha` | Lusha B2B prospecting, enrichment, and buying-signal workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
 | `speak` | Speaks completed Cline replies with ElevenLabs text to speech. |
