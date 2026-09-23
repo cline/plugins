@@ -1,0 +1,9 @@
+CodeRabbit guidance
+
+Portions of the review and autofix workflow are adapted from CodeRabbit AI's public agent skills.
+
+Original project: https://github.com/coderabbitai/skills
+
+Modified for Cline's plugin model with bundled skills and guarded GitHub PR review-thread handling.
+
+License: MIT
