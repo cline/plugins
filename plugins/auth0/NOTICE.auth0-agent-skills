@@ -1,0 +1,10 @@
+This plugin bundles Auth0 skill material from the Auth0 agent-skills project.
+
+Source: https://github.com/auth0/agent-skills
+Author: Auth0 <support@auth0.com>
+
+Most bundled skill material declares Apache-2.0.
+See LICENSE.auth0-agent-skills.
+
+The auth0-java-mvc-common skill declares MIT.
+See LICENSE.auth0-java-mvc-common.
