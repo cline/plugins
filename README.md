@@ -21,8 +21,9 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
 | `bundled-skills-demo` | A package plugin that proves bundled skill discovery works. |
-| `custom-compaction` | Provider message compaction through a plugin message builder. |
+| `clickhouse-best-practices` | ClickHouse and chDB schema, query, architecture, and client troubleshooting skills. |
 | `clickhouse-data-analyst` | ClickHouse data analyst skill with supporting analysis and ClickHouse sub-skills. |
+| `custom-compaction` | Provider message compaction through a plugin message builder. |
 | `env-blocker` | A hook that blocks reads of secret `.env` files. |
 | `gitignore-read-files-guard` | A hook that blocks file access to `.gitignore` ignored paths. |
 | `goal` | Completion nudges for active goals with a slash command and completion tool. |
