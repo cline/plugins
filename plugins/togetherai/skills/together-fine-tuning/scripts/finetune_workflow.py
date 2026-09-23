@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""
+Together AI Fine-Tuning -- Full Workflow (v2 SDK)
+
+End-to-end: prepare data -> upload -> create LoRA job -> monitor -> deploy.
+
+Usage:
+    python finetune_workflow.py --training-file train.jsonl --model meta-llama/Meta-Llama-3.1-8B-Instruct-Reference --i-understand-costs
+    python finetune_workflow.py --i-understand-costs
+    python finetune_workflow.py --training-file train.jsonl --deploy --i-understand-costs
+
+Requires:
+    uv pip install "together>=2.0.0"
+    export TOGETHER_API_KEY=your_key
+"""
+
+import argparse
+import json
+import tempfile
+import time
+from pathlib import Path
+
+from together import Together
+
+client = Together()
+
+
+def wait_for_file_ready(file_id: str, poll_interval: int = 5) -> None:
+    """Block until server-side fine-tuning validation finishes for ``file_id``.
+
+    Raises ``ValueError`` if the dataset is rejected (``INVALID_FORMAT``) and
+    ``RuntimeError`` for any other terminal failure.
+    """
+    while True:
+        meta = client.files.retrieve(file_id)
+        if meta.processing_status == "COMPLETED":
+            return
+        if meta.processing_status == "INVALID_FORMAT":
+            raise ValueError(
+                f"file {file_id} is not suitable for fine-tuning: {meta.validation_report}"
+            )
+        if meta.processing_status == "FAILED":
+            raise RuntimeError(
+                f"file {file_id} processing did not complete: {meta.validation_report}"
+            )
+        time.sleep(poll_interval)
+
+
+def sample_training_data() -> list[dict]:
+    """Return a small conversational dataset for demonstration."""
+    return [
+        {
+            "messages": [
+                {"role": "system", "content": "You are a helpful customer support agent."},
+                {"role": "user", "content": "How do I reset my password?"},
+                {
+                    "role": "assistant",
+                    "content": (
+                        "Go to Settings > Security > Reset Password. "
+                        "You'll receive a confirmation email within 5 minutes."
+                    ),
+                },
+            ]
+        },
+        {
+            "messages": [
+                {"role": "system", "content": "You are a helpful customer support agent."},
+                {"role": "user", "content": "What are your business hours?"},
+                {
+                    "role": "assistant",
+                    "content": (
+                        "We're available Monday-Friday, 9 AM - 6 PM EST. "
+                        "Weekend support is available via email."
+                    ),
+                },
+            ]
+        },
+        {
+            "messages": [
+                {"role": "system", "content": "You are a helpful customer support agent."},
+                {"role": "user", "content": "How do I cancel my subscription?"},
+                {
+                    "role": "assistant",
+                    "content": (
+                        "Go to Settings > Billing > Cancel Subscription. "
+                        "Your access continues until the end of the billing period."
+                    ),
+                },
+            ]
+        },
+    ]
+
+
+def create_temp_dataset(rows: list[dict]) -> Path:
+    """Write JSONL rows to a temporary file."""
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False, encoding="utf-8") as temp_file:
+        for example in rows:
+            temp_file.write(json.dumps(example) + "\n")
+        return Path(temp_file.name)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Together AI fine-tuning workflow")
+    parser.add_argument("--training-file", help="Path to a training JSONL file")
+    parser.add_argument(
+        "--model",
+        default="meta-llama/Meta-Llama-3.1-8B-Instruct-Reference",
+        help="Base model to fine-tune",
+    )
+    parser.add_argument("--suffix", default="support-bot-v1", help="Suffix for the fine-tuned model")
+    parser.add_argument("--n-epochs", type=int, default=3, help="Number of training epochs")
+    parser.add_argument("--learning-rate", type=float, default=1e-5, help="Training learning rate")
+    parser.add_argument("--hardware", default="4x_nvidia_h100_80gb_sxm", help="Hardware for optional deployment")
+    parser.add_argument("--display-name", default="Support Bot v1", help="Display name for the endpoint")
+    parser.add_argument(
+        "--poll-interval",
+        type=int,
+        default=30,
+        help="Seconds between fine-tuning status checks",
+    )
+    parser.add_argument(
+        "--deploy",
+        action="store_true",
+        help="Deploy the completed fine-tuned model to a dedicated endpoint",
+    )
+    parser.add_argument(
+        "--i-understand-costs",
+        action="store_true",
+        help="Required acknowledgement before uploading data, starting training, or deploying endpoints",
+    )
+    parser.add_argument(
+        "--test-prompt",
+        default="How do I update my billing info?",
+        help="Prompt to use when testing the deployed model",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    if not args.i_understand_costs:
+        raise SystemExit(
+            "This script uploads data and starts a paid fine-tuning job. "
+            "Pass --i-understand-costs after reviewing the target model, data, and expected spend."
+        )
+
+    data_path: Path | None = None
+    upload_path = args.training_file
+    if upload_path is None:
+        training_data = sample_training_data()
+        data_path = create_temp_dataset(training_data)
+        upload_path = str(data_path)
+        print(f"Wrote {len(training_data)} examples to {data_path}")
+
+    # --- 2. Upload training file with validation enabled ---
+    try:
+        file_response = client.files.upload(file=upload_path, purpose="fine-tune", check=True)
+    finally:
+        if data_path is not None:
+            data_path.unlink(missing_ok=True)
+    file_id = file_response.id
+    print(f"Uploaded file: {file_id}")
+
+    # Wait for server-side validation before spending tokens on training.
+    print("Waiting for server-side validation...")
+    wait_for_file_ready(file_id)
+    print("File ready for fine-tuning.")
+
+    # --- 3. Create LoRA fine-tuning job ---
+    job = client.fine_tuning.create(
+        training_file=file_id,
+        model=args.model,
+        n_epochs=args.n_epochs,
+        learning_rate=args.learning_rate,
+        lora=True,
+        suffix=args.suffix,
+    )
+    print(f"Created fine-tuning job: {job.id}")
+
+    # --- 4. Monitor training ---
+    while True:
+        status = client.fine_tuning.retrieve(id=job.id)
+        print(f"  Status: {status.status}")
+
+        if status.status == "completed":
+            print("\nTraining complete!")
+            print(f"  Output model: {status.x_model_output_name}")
+            break
+        if status.status in ("failed", "cancelled"):
+            print(f"Job ended: {status.status}")
+            raise SystemExit(1)
+
+        time.sleep(args.poll_interval)
+
+    # --- 5. List training events ---
+    events = client.fine_tuning.list_events(id=job.id)
+    for event in events.data:
+        print(f"  [{event.created_at}] {event.message}")
+
+    if not args.deploy:
+        print("\nTraining complete. Deployment skipped; pass --deploy to create a dedicated endpoint.")
+        return
+
+    # --- 6. Deploy as a Dedicated Endpoint ---
+    output_model = status.x_model_output_name
+    endpoint = client.endpoints.create(
+        display_name=args.display_name,
+        model=output_model,
+        hardware=args.hardware,
+        autoscaling={"min_replicas": 1, "max_replicas": 1},
+    )
+    print(f"\nCreated endpoint: {endpoint.id}")
+
+    # Wait for the endpoint to be ready before querying
+    while True:
+        ep = client.endpoints.retrieve(endpoint.id)
+        print(f"  Endpoint state: {ep.state}")
+        if ep.state == "STARTED":
+            break
+        if ep.state in ("FAILED", "STOPPED"):
+            print(f"Endpoint {ep.state}")
+            raise SystemExit(1)
+        time.sleep(args.poll_interval)
+
+    # --- 7. Query the fine-tuned model via the endpoint name ---
+    response = client.chat.completions.create(
+        model=endpoint.name,
+        messages=[
+            {"role": "system", "content": "You are a helpful customer support agent."},
+            {"role": "user", "content": args.test_prompt},
+        ],
+        max_tokens=256,
+    )
+    print(f"\nFine-tuned model response: {response.choices[0].message.content}")
+    print(f"\nEndpoint is running. Delete it when done to avoid charges:")
+    print(f"  client.endpoints.delete(\"{endpoint.id}\")")
+
+
+if __name__ == "__main__":
+    main()
