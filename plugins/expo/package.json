@@ -1,0 +1,28 @@
+{
+  "name": "expo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Expo MCP and workflow skills for building, deploying, upgrading, and debugging Expo apps.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  },
+  "peerDependencies": {
+    "@cline/sdk": "*"
+  },
+  "peerDependenciesMeta": {
+    "@cline/sdk": {
+      "optional": true
+    }
+  }
+}
