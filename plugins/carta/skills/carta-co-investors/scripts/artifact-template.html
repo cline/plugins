@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <style>
+    /* Inter font -- Carta's primary typeface. Loaded explicitly so the artifact
+       renders consistently on systems without "Inter var" installed locally. */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    /* === SHARED CARTA STYLESHEET (inlined from ux-patterns/css/cap-table-artifact.css) === */
+    :root {
+        color-scheme: light;
+        --surface-bg: #FFFFFF;
+        --surface-underlay: #F1F1F1;
+        --surface-darkgray-default: #1A1A1A;
+        --text-default: #1A1A1A;
+        --text-subtle: #656B6B;
+        --border-default: #A7AAAA;
+        --border-subtle: #DEDFDF;
+        --negative-subtle: #FFEEEF;
+        --negative-strong: #E52431;
+        --positive-subtle: #EBF7F6;
+        --positive-strong: #2D9E90;
+        --info-subtle: #EAF0F8;
+        --info-strong: #285DA3;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: "Inter var", "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--surface-bg);
+        color: var(--text-default);
+        padding: 24px;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .header { margin-bottom: 32px; }
+    /* Ink heading-1 spec is weight 400 (intended for SangBleu serif). At Inter,
+       weight 500 reads better than the canonical 600 without going under-emphasized. */
+    .header h1 { font-size: 28px; font-weight: 500; line-height: 40px; color: var(--text-default); margin-bottom: 8px; letter-spacing: -0.01em; }
+    .header p { color: var(--text-subtle); font-size: 14px; font-weight: 400; line-height: 24px; }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .metric-card { background: var(--surface-bg); border: 1px solid #E9EAEA; padding: 20px; }
+    /* Tooltipped tiles need positioning context + hover-elevation transition.
+       Scoping these to .has-tooltip avoids attaching listeners to static tiles. */
+    .metric-card.has-tooltip { position: relative; transition: box-shadow 0.15s ease, transform 0.15s ease; }
+    .metric-card.has-tooltip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+    .metric-label { font-size: 12px; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 500; line-height: 20px; display: inline-flex; align-items: center; gap: 4px; }
+    .metric-value { font-size: 28px; font-weight: 600; line-height: 48px; color: var(--surface-darkgray-default); font-variant-numeric: tabular-nums; }
+    /* Text-shaped metric value -- for tiles whose primary value is a name, not a number.
+       Slightly smaller, no tabular-nums so the name kerns naturally. */
+    .metric-value-text { font-size: 20px; font-weight: 600; line-height: 28px; color: var(--surface-darkgray-default); overflow-wrap: anywhere; }
+    .metric-sub { font-size: 13px; color: var(--text-subtle); margin-top: 4px; font-weight: 400; }
+
+    /* Ink tooltip -- black background, white text, caret pointing into the trigger.
+       Spec: plugins/skill-dev/skills/theme-with-ink/SKILL.md -- Tooltip section. */
+    .has-tooltip { cursor: help; }
+    .has-tooltip:focus-visible { outline: 2px solid var(--info-strong); outline-offset: 2px; box-shadow: 0 0 0 4px var(--border-focus-light); border-radius: 2px; }
+    .tooltip-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--text-subtle); font-size: 10px; font-weight: 600; line-height: 1; color: var(--text-subtle); font-family: "Inter var", "Inter", sans-serif; }
+    .tooltip {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1A1A1A;
+      color: #FFFFFF;
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      line-height: 18px;
+      font-weight: 400;
+      font-family: "Inter var", "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      width: max-content;
+      max-width: 280px;
+      text-align: left;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease, visibility 0.15s ease;
+      pointer-events: none;
+      z-index: 100;
+      white-space: normal;
+      letter-spacing: normal;
+      text-transform: none;
+    }
+    /* Caret points up into the trigger card (tooltip sits below it) */
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 6px solid #1A1A1A;
+    }
+    .has-tooltip:hover .tooltip,
+    .has-tooltip:focus-visible .tooltip { opacity: 1; visibility: visible; }
+
+    /* Wide tooltip variant -- for structured/multi-line content. Left-anchored so
+       it never overflows the viewport when used on the leftmost tile. */
+    .tooltip-wide {
+      width: 360px;
+      max-width: 360px;
+      left: 0;
+      transform: none;
+      padding: 12px 14px;
+    }
+    .tooltip-wide::after { left: 28px; transform: none; }
+    .tooltip-wide .tt-intro { color: rgba(255, 255, 255, 0.95); margin-bottom: 10px; }
+    .tooltip-wide .tt-section-label { color: rgba(255, 255, 255, 0.7); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; margin-top: 4px; }
+    .tooltip-wide .tt-group { margin-bottom: 10px; }
+    .tooltip-wide .tt-group:last-child { margin-bottom: 0; }
+    .tooltip-wide .tt-group-canonical { color: #FFFFFF; font-weight: 600; font-size: 12px; line-height: 18px; margin-bottom: 2px; }
+    .tooltip-wide .tt-group-merged { color: rgba(255, 255, 255, 0.78); font-size: 11.5px; line-height: 16px; padding-left: 10px; }
+    .tooltip-wide .tt-empty { color: rgba(255, 255, 255, 0.85); font-style: italic; }
+
+    .table-title { font-size: 16px; font-weight: 500; line-height: 28px; color: var(--text-default); margin-bottom: 12px; }
+    .table-container { background: var(--surface-bg); overflow-x: auto; }
+    table { width: 100%; min-width: 480px; border-collapse: collapse; }
+    th { background: var(--surface-bg); padding: 10px 16px; text-align: left; font-size: 14px; font-weight: 500; color: var(--text-default); border-bottom: 1px solid var(--border-default); line-height: 20px; }
+    td { padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); font-size: 14px; color: var(--text-default); line-height: 24px; }
+    tbody tr:hover { background: #E9EAEA; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .number { font-variant-numeric: tabular-nums; font-size: 14px; text-align: right; }
+    .timestamp { font-size: 12px; color: var(--text-subtle); margin-top: 24px; text-align: center; line-height: 20px; }
+
+    /* === ARTIFACT-SPECIFIC STYLES === */
+
+    /* Extended Ink tokens used by artifact-specific styles -- not in the canonical
+       stylesheet but defined in plugins/skill-dev/skills/theme-with-ink/SKILL.md. */
+    :root {
+      --border-focus-light: #C0D1E9;       /* Ink border.focus.light */
+      --surface-lightgray-hover: #E9EAEA;  /* Ink surface.lightgray.hover */
+      --warning-subtle: #FFFCED;           /* Ink Category Yellow tag bg */
+      --tag-yellow-text: #C88600;          /* Ink Category Yellow tag text */
+    }
+
+    .company-link {
+      color: var(--info-strong);
+      font-size: 13px;
+      font-weight: 400;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0 8px 0 0;
+      display: inline;
+      white-space: nowrap;
+    }
+    .company-link:hover { color: #1A3E6D; }
+
+    .drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+    .drawer-backdrop.open { display: block; }
+
+    .drawer {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 680px;
+      max-width: 95vw;
+      height: 100vh;
+      background: var(--surface-bg);
+      box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer table { min-width: 0; }
+
+    /* Ink Transparent Button -- 4px radius, surface.lightgray.hover on hover. */
+    .drawer-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-default);
+      cursor: pointer;
+      padding: 0;
+      transition: background-color 0.12s ease;
+    }
+    .drawer-close:hover { background: var(--surface-lightgray-hover); }
+    .drawer-close:active { background: var(--border-subtle); }
+    .drawer-close:focus-visible { outline: 2px solid var(--info-strong); outline-offset: 2px; box-shadow: 0 0 0 4px var(--border-focus-light); }
+    .drawer-close svg { display: block; }
+
+    .drawer h2 { font-size: 18px; font-weight: 600; color: var(--text-default); margin-bottom: 4px; padding-right: 32px; }
+    .drawer-subtitle { font-size: 13px; color: var(--text-subtle); margin-bottom: 20px; }
+    .drawer-round-label { font-size: 14px; font-weight: 600; color: var(--text-default); margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle); }
+
+    .you-badge {
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+      padding: 0 6px;
+      margin-left: 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--positive-subtle);
+      color: var(--positive-strong);
+      border: 1px solid var(--positive-strong);
+      vertical-align: middle;
+    }
+
+    /* Ink spec: tables have no outer container border. Borders come from header
+       (#A7AAAA bottom) and body cells (#DEDFDF bottom) -- see theme-with-ink. */
+    .drawer .table-container { box-shadow: none; }
+    .drawer td, .drawer th { padding: 8px 12px; }
+    /* Carta UX rule: totals always bolded. */
+    .drawer tfoot td {
+      font-weight: 600;
+      font-size: 13px;
+      background: #EAF0F8;
+      border-top: 1px solid var(--border-default);
+    }
+
+    /* Ink Category/Flex Tag -- no border, semantic colors. Used on entity-type cells.
+       Compact 24px height (vs Ink standard 28px) for table-cell density;
+       reserves the green (Positive) palette for the inline "You" badge. */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .tag-neutral { background: var(--surface-underlay); color: var(--text-default); }
+    .tag-blue { background: var(--info-subtle); color: var(--info-strong); }
+    .tag-yellow { background: var(--warning-subtle); color: var(--tag-yellow-text); }
+
+    .page-footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .carta-link { font-size: 13px; color: var(--info-strong); text-decoration: none; }
+    .carta-link:hover { text-decoration: underline; }
+    .powered-by-carta {
+      position: fixed;
+      bottom: 20px; right: 20px;
+      width: min(13.5vw, calc(13.5vh * 5.66));
+      height: auto; line-height: 0;
+      pointer-events: none; z-index: 10;
+    }
+    .powered-by-carta svg { display: block; width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header" id="page-header"></div>
+
+    <div class="metrics-grid" id="metrics-grid"></div>
+
+    <div class="table-title">Top Co-Investors by Portfolio Overlap</div>
+    <div class="table-container" id="main-table"></div>
+
+    <div class="page-footer" id="page-footer"></div>
+  </div>
+
+  <div class="drawer-backdrop" id="backdrop" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Close drawer">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+        <path d="M2 2 L10 10 M10 2 L2 10"/>
+      </svg>
+    </button>
+    <h2 id="drawer-title"></h2>
+    <div class="drawer-subtitle" id="drawer-subtitle"></div>
+    <div id="drawer-content"></div>
+  </div>
+
+  <script>
+    const DATA = {{DATA}};
+
+    function fmt(n) {
+      if (!n || n === 0) return '--';
+      return '$' + Math.round(n).toLocaleString('en-US');
+    }
+
+    function pct(n) {
+      if (!n || n === 0) return '--';
+      return (n * 100).toFixed(1) + '%';
+    }
+
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function escAttr(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    }
+
+    // Map investor entity type to an Ink Category Tag color.
+    // Green is reserved for the inline "You" badge -- no entity type maps to it.
+    function entityTagClass(entityType) {
+      const t = (entityType || '').toLowerCase();
+      if (t.indexOf('accelerator') !== -1 || t.indexOf('corporate') !== -1) return 'tag tag-blue';
+      if (t.indexOf('hedge') !== -1 || t.indexOf('growth') !== -1) return 'tag tag-yellow';
+      return 'tag tag-neutral';
+    }
+
+    function entityTag(entityType) {
+      if (!entityType || entityType === '--') return '<span class="tag tag-neutral">--</span>';
+      return '<span class="' + entityTagClass(entityType) + '">' + esc(entityType) + '</span>';
+    }
+
+    function renderHeader() {
+      const m = DATA.meta;
+      const spaPct = m.totalCompanies > 0 ? Math.round(m.spaCoverage / m.totalCompanies * 100) : 0;
+      document.getElementById('page-header').innerHTML =
+        '<h1>' + esc(m.firmName) + ' -- Co-Investor Analysis</h1>' +
+        '<p>Based on ' + m.spaCoverage + ' SPAs covering ' + spaPct + '% of your ' + m.totalCompanies + ' portfolio companies</p>';
+    }
+
+    function renderMetrics() {
+      const m = DATA.meta;
+      const ci = DATA.coInvestors;
+      const uniqueCount = ci.length;
+
+      // Portfolio coverage
+      const spaPct = m.totalCompanies > 0 ? Math.round(m.spaCoverage / m.totalCompanies * 100) : 0;
+      const missing = Math.max(m.totalCompanies - m.spaCoverage, 0);
+      const coverageTooltip =
+        'Co-investor analysis only covers portfolio companies with a Stock Purchase Agreement (SPA) uploaded to Carta. ' +
+        m.spaCoverage + ' of your ' + m.totalCompanies + ' portfolio companies have an SPA on file' +
+        (missing > 0 ? ' -- the remaining ' + missing + ' are not yet visible in this report.' : '.');
+
+      // Top co-investor -- coInvestors is already sorted desc by companyCount
+      const top = ci[0];
+      const topName = top ? top.name : '--';
+      const topCount = top ? top.companyCount : 0;
+      const topSub = top ? topCount + (topCount === 1 ? ' company' : ' companies') : '';
+
+      // Unique co-investors tooltip -- explains canonical groupings + lists merges
+      const groupings = m.groupings || [];
+      let groupingsHTML = '<div class="tt-intro">Some firms invest through multiple legal vehicles (separate fund entities). We grouped them under one canonical name so each firm counts once.</div>';
+      if (groupings.length > 0) {
+        const mergeWord = groupings.length === 1 ? 'merge' : 'merges';
+        groupingsHTML += '<div class="tt-section-label">' + groupings.length + ' ' + mergeWord + ' applied</div>';
+        groupings.forEach(function (g) {
+          const lines = (g.merged || []).map(function (n) { return '· ' + esc(n); }).join('<br>');
+          groupingsHTML += '<div class="tt-group"><div class="tt-group-canonical">' + esc(g.canonical) + '</div><div class="tt-group-merged">' + lines + '</div></div>';
+        });
+      } else {
+        groupingsHTML += '<div class="tt-empty">No multi-vehicle merges in this report.</div>';
+      }
+
+      document.getElementById('metrics-grid').innerHTML =
+        '<div class="metric-card has-tooltip" tabindex="0" aria-describedby="unique-tooltip">' +
+          '<div class="metric-label">Unique Co-Investors <span class="tooltip-icon" aria-hidden="true">i</span></div>' +
+          '<div class="metric-value">' + uniqueCount + '</div>' +
+          '<div class="tooltip tooltip-wide" id="unique-tooltip" role="tooltip">' + groupingsHTML + '</div>' +
+        '</div>' +
+        '<div class="metric-card">' +
+          '<div class="metric-label">Top Co-Investor</div>' +
+          '<div class="metric-value-text">' + esc(topName) + '</div>' +
+          '<div class="metric-sub">' + esc(topSub) + '</div>' +
+        '</div>' +
+        '<div class="metric-card has-tooltip" tabindex="0" aria-describedby="coverage-tooltip">' +
+          '<div class="metric-label">Portfolio Coverage <span class="tooltip-icon" aria-hidden="true">i</span></div>' +
+          '<div class="metric-value">' + spaPct + '%</div>' +
+          '<div class="tooltip" id="coverage-tooltip" role="tooltip">' + esc(coverageTooltip) + '</div>' +
+        '</div>';
+    }
+
+    function renderMainTable() {
+      const ci = DATA.coInvestors;
+      let html = '<table><thead><tr><th>#</th><th>Co-investor</th><th style="text-align:right">Companies</th><th>Type</th><th>Portfolio companies</th></tr></thead><tbody>';
+      ci.forEach((inv, i) => {
+        const chips = inv.companies.slice(0, 8).map(c =>
+          '<button class="company-link" onclick="openDrawer(\'' + escAttr(c) + '\')">' + esc(c) + '</button>'
+        ).join('');
+        const more = inv.companies.length > 8 ? ' <span style="font-size:12px;color:var(--text-subtle)">+' + (inv.companies.length - 8) + ' more</span>' : '';
+        html += '<tr><td>' + (i+1) + '</td><td style="font-weight:500">' + esc(inv.name) + '</td><td class="number">' + inv.companyCount + '</td><td>' + entityTag(inv.entityType) + '</td><td>' + chips + more + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      document.getElementById('main-table').innerHTML = html;
+    }
+
+    function renderFooter() {
+      const m = DATA.meta;
+      const html = '<a class="carta-link" href="https://app.carta.com/investors/firm/' + m.firmCartaId + '/portfolio/documents/" target="_blank">View SPA source documents in Carta ↗</a>';
+      document.getElementById('page-footer').innerHTML = html;
+    }
+
+    function hasDate(d) {
+      return d && d !== '--';
+    }
+
+    function roundLabel(shareClass, closingDate) {
+      return hasDate(closingDate) ? shareClass + ' · ' + closingDate : shareClass;
+    }
+
+    function openDrawer(name) {
+      const rounds = DATA.companyRounds[name];
+      if (!rounds) return;
+      document.getElementById('drawer-title').textContent = name;
+      const first = rounds[0];
+      document.getElementById('drawer-subtitle').textContent = roundLabel(first.shareClass, first.closingDate);
+
+      let html = '';
+      rounds.forEach((round, ri) => {
+        if (rounds.length > 1) {
+          html += '<div class="drawer-round-label">' + esc(roundLabel(round.shareClass, round.closingDate)) + '</div>';
+        }
+        html += '<div class="table-container"><table><thead><tr><th>Investor</th><th>Type</th><th style="text-align:right">% of round</th><th style="text-align:right">Amount paid</th></tr></thead><tbody>';
+        const sorted = [...round.investors].sort((a, b) => (b.pctOfRound || 0) - (a.pctOfRound || 0));
+        sorted.forEach(inv => {
+          const bold = inv.isFirm ? 'font-weight:600' : '';
+          const badge = inv.isFirm ? ' <span class="you-badge">You</span>' : '';
+          html += '<tr><td style="' + bold + '">' + esc(inv.name) + badge + '</td><td>' + entityTag(inv.entityType) + '</td><td class="number">' + pct(inv.pctOfRound) + '</td><td class="number">' + fmt(inv.amountPaid) + '</td></tr>';
+        });
+        const seen = new Set();
+        let total = 0;
+        round.investors.forEach(inv => {
+          if (!seen.has(inv.name) && inv.amountPaid) {
+            total += inv.amountPaid;
+            seen.add(inv.name);
+          }
+        });
+        html += '</tbody><tfoot><tr><td colspan="3">Total raised</td><td class="number">' + fmt(total) + '</td></tr></tfoot></table></div>';
+      });
+      document.getElementById('drawer-content').innerHTML = html;
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('backdrop').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('backdrop').classList.remove('open');
+    }
+
+    renderHeader();
+    renderMetrics();
+    renderMainTable();
+    renderFooter();
+  </script>
+  <div class="powered-by-carta" aria-label="Powered by Carta">
+    <svg width="572" height="101" viewBox="0 0 572 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M370.228 0V100.61H571.448V0H370.228ZM567.423 96.5856H374.252V4.0244H567.423V96.5856ZM396.623 52.2674C396.623 42.1817 405.138 36.2615 412.777 36.2615C418.246 36.2615 423.347 38.3119 426.076 43.0367L420.967 45.9988C420.087 44.6697 418.883 43.5796 417.472 42.8341C416.057 42.0885 414.48 41.6995 412.878 41.7116C408.386 41.7116 403.042 45.2167 403.042 52.162C403.042 59.1074 408.151 62.6732 413.304 62.6732C416.888 62.6732 419.864 60.6756 421.628 57.5919L426.85 60.0029C423.894 65.3193 418.611 68.1517 412.477 68.1517C404.761 68.1436 396.623 62.2154 396.623 52.2633V52.2674ZM445.493 68.1517C449.738 68.1517 453.748 66.2796 455.816 63.5607V67.3008H462.125V37.0436H455.816V40.7918C453.85 38.0485 449.746 36.2615 445.493 36.2615C436.2 36.2615 429.701 43.0245 429.701 52.2066C429.701 61.3887 436.261 68.1517 445.493 68.1517ZM446.101 41.9993C451.932 41.9993 455.934 46.3472 455.934 52.2066C455.934 58.066 451.928 62.4139 446.101 62.4139C440.275 62.4139 436.139 58.0052 436.139 52.0851C436.139 46.1649 440.271 41.9993 446.101 41.9993ZM496.029 43.0488H489.481V37.0071H496.09V29.1217H502.59V37.0071H509.195V43.0488H502.59V67.2886H496.029V43.0488ZM527.315 68.1517C531.568 68.1517 535.578 66.2796 537.646 63.5607V67.3008H543.963V37.0436H537.646V40.7918C535.679 38.0485 531.576 36.2615 527.315 36.2615C518.03 36.2615 511.53 43.0245 511.53 52.2066C511.53 61.3887 518.086 68.1517 527.315 68.1517ZM527.931 41.9993C533.753 41.9993 537.767 46.3472 537.767 52.2066C537.767 58.066 533.753 62.4139 527.931 62.4139C522.108 62.4139 517.969 58.0052 517.969 52.0851C517.969 46.1649 522.1 41.9993 527.931 41.9993ZM476.409 67.2602H469.849V37.0031H475.858V42.6355C477.346 39.2885 479.58 37.1084 483.213 36.9261C483.963 36.9139 484.709 36.9261 485.459 37.0071L485.359 43.061C480.14 43.061 476.413 45.8569 476.413 53.6532V67.2643L476.409 67.2602Z" fill="#1A1A1A"/><path d="M0 67.2018V65.4679L2.60086 65.0633C4.62375 64.7743 4.97053 64.3119 4.97053 61.9422V28.6512C4.97053 26.2816 4.62375 25.8192 2.60086 25.5302L0 25.1256V23.3917H19.8243C28.3205 23.3917 37.4524 25.4146 37.4524 35.1245C37.4524 42.9849 30.0544 47.3774 19.8821 47.3774H10.9814V62C10.9814 64.3119 11.3282 64.7743 13.3511 64.9477L17.6858 65.3523V67.2018H0ZM10.9814 27.0907V44.8922H20.5179C26.76 44.8922 30.6323 42.0601 30.6323 35.2979C30.6323 28.5356 26.76 25.7036 20.5179 25.7036H13.8713C11.4438 25.7036 10.9814 25.877 10.9814 27.0907Z" fill="#1A1A1A"/><path d="M54.8109 67.8953C46.3725 67.8953 39.6681 61.8844 39.6681 52.5791C39.6681 43.2738 46.3725 37.263 54.8109 37.263C63.2492 37.263 69.9536 43.2738 69.9536 52.5791C69.9536 61.8844 63.2492 67.8953 54.8109 67.8953ZM54.8109 65.6412C59.6658 65.6412 64.0006 61.7111 64.0006 52.5791C64.0006 43.4472 59.6658 39.5171 54.8109 39.5171C49.9559 39.5171 45.6212 43.4472 45.6212 52.5791C45.6212 61.7111 49.9559 65.6412 54.8109 65.6412Z" fill="#1A1A1A"/><path d="M87.6815 67.8375L76.6423 42.2335C76.1221 41.0776 75.8331 40.6152 73.8102 40.1528L72.0763 39.7482V38.1877H86.41V39.7482L84.5604 40.1528C82.5376 40.6152 81.9596 41.0776 82.4798 42.2335L90.2823 60.6129L96.4088 46.6261L92.8832 38.1877H104.385V39.7482L102.535 40.1528C100.512 40.6152 99.9922 41.0776 100.455 42.2335L107.853 60.6129L115.655 42.2335C116.175 41.0776 115.771 40.6152 113.748 40.1528L111.898 39.7482V38.1877H122.995V39.7482L121.261 40.1528C119.239 40.6152 118.95 41.0776 118.429 42.2335L107.332 67.8375H105.252L97.7381 49.8627L89.7622 67.8375H87.6815Z" fill="#1A1A1A"/><path d="M139.946 67.8953C130.988 67.8953 125.15 61.4221 125.15 52.7525C125.15 43.0427 132.433 37.263 139.599 37.263C146.824 37.263 152.43 41.7711 153.644 49.9205H130.641C130.641 50.0939 130.641 50.2673 130.641 50.4407C130.641 59.0524 135.091 64.2541 141.911 64.2541C146.073 64.2541 150.465 62.6936 152.257 56.4515H154.106C152.488 64.0229 147.518 67.8953 139.946 67.8953ZM139.484 39.4015C135.265 39.4015 131.739 42.2335 130.872 47.6086H147.575C147.113 41.7133 143.818 39.4015 139.484 39.4015Z" fill="#1A1A1A"/><path d="M159.249 67.2018V65.6412L161.099 65.2367C163.122 64.7743 163.469 64.4275 163.469 63.156V42.8693C163.469 41.5977 163.122 41.251 161.099 40.7886L159.249 40.384V38.8235L168.67 37.4942V44.7188C170 39.806 174.045 37.4364 177.282 37.4364C179.594 37.4364 181.443 38.5345 181.443 40.9042C181.443 42.8115 179.998 44.083 178.265 44.083C175.837 44.083 175.201 41.7133 172.889 41.7133C170.924 41.7133 168.67 44.5454 168.67 48.2444V63.156C168.67 64.4275 169.017 64.8321 171.04 65.1211L174.045 65.5257V67.2018H159.249Z" fill="#1A1A1A"/><path d="M199.407 67.8953C190.448 67.8953 184.611 61.4221 184.611 52.7525C184.611 43.0427 191.893 37.263 199.06 37.263C206.285 37.263 211.891 41.7711 213.105 49.9205H190.102C190.102 50.0939 190.102 50.2673 190.102 50.4407C190.102 59.0524 194.552 64.2541 201.372 64.2541C205.533 64.2541 209.926 62.6936 211.718 56.4515H213.567C211.949 64.0229 206.978 67.8953 199.407 67.8953ZM198.945 39.4015C194.725 39.4015 191.2 42.2335 190.333 47.6086H207.036C206.574 41.7133 203.279 39.4015 198.945 39.4015Z" fill="#1A1A1A"/><path d="M232.581 67.8953C225.241 67.8953 218.884 62.1156 218.884 52.9837C218.884 43.794 225.415 37.263 233.911 37.263C237.494 37.263 239.806 38.7657 241.193 40.095V26.6861C241.193 25.4146 240.846 24.8944 238.823 24.6055L235.818 24.2009V22.6404L246.395 21.311V62.2312C246.395 63.5028 246.742 63.8495 248.765 64.3119L250.614 64.7165V66.277L241.193 67.4329V63.7339C240.153 64.8899 237.205 67.8953 232.581 67.8953ZM235.298 64.6587C238.246 64.6587 240.095 63.6184 241.193 62.6936V41.3666C239.517 40.3262 237.841 39.7482 235.356 39.7482C229.229 39.7482 224.663 44.372 224.663 51.9434C224.663 59.8038 229.171 64.6587 235.298 64.6587Z" fill="#1A1A1A"/><path d="M286.714 67.8953C283.131 67.8953 280.53 66.3926 279.143 65.0633L274.635 67.8375H274.23V26.6861C274.23 25.4146 273.883 25.0678 271.86 24.6055L270.011 24.2009V22.6404L279.432 21.311V41.4244C280.472 40.2684 283.42 37.263 288.043 37.263C295.384 37.263 301.741 43.0427 301.741 52.1746C301.741 61.3643 295.21 67.8953 286.714 67.8953ZM285.327 40.4996C282.379 40.4996 280.53 41.5399 279.432 42.4647V63.7917C281.108 64.8321 282.784 65.4101 285.269 65.4101C291.396 65.4101 295.962 60.7863 295.962 53.2149C295.962 45.3545 291.453 40.4996 285.327 40.4996Z" fill="#1A1A1A"/><path d="M311.899 81.8244C310.107 81.8244 309.067 80.495 309.067 79.1657C309.067 77.6052 310.223 76.2759 312.65 75.2933C314.789 74.4264 315.771 74.0218 316.812 71.6521L319.124 66.5082L308.662 42.2335C308.142 41.0776 307.853 40.6152 305.83 40.1528L304.096 39.7482V38.1877H318.43V39.7482L316.581 40.1528C314.558 40.6152 313.98 41.0776 314.5 42.2335L322.071 60.0927L330.105 42.2335C330.625 41.0776 330.221 40.6152 328.198 40.1528L326.348 39.7482V38.1877H337.445V39.7482L335.711 40.1528C333.688 40.6152 333.4 41.0776 332.879 42.2335L317.39 76.3915C315.482 80.6106 313.575 81.8244 311.899 81.8244Z" fill="#1A1A1A"/></svg>
+  </div>
+</body>
+</html>
