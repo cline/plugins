@@ -1,0 +1,19 @@
+{
+  "name": "qdrant",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Qdrant vector search skills for scaling, search quality, monitoring, deployment, migrations, upgrades, and SDK usage.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
