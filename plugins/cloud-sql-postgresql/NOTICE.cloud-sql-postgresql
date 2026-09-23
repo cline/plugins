@@ -1,0 +1,8 @@
+Cloud SQL for PostgreSQL skills for Cline
+
+This plugin includes adapted guidance from the Cloud SQL for PostgreSQL Agent Skills project by Google LLC:
+- https://github.com/gemini-cli-extensions/cloud-sql-postgresql
+
+The adapted skill guidance is distributed under Apache-2.0. See LICENSE.cloud-sql-postgresql in this directory.
+
+The Cline plugin files are modified from the original guidance to remove bundled helper-script execution and to fit Cline's plugin and skill model.
