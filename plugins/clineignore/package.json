@@ -1,0 +1,26 @@
+{
+	"name": "clineignore",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Cline plugin that blocks tool access to paths matched by a workspace .clineignore file.",
+	"cline": {
+		"plugins": [
+			{
+				"paths": ["./index.ts"],
+				"capabilities": ["hooks", "rules"]
+			}
+		]
+	},
+	"peerDependencies": {
+		"@cline/core": "*"
+	},
+	"peerDependenciesMeta": {
+		"@cline/core": {
+			"optional": true
+		}
+	},
+	"dependencies": {
+		"ignore": "^7.0.5"
+	}
+}
