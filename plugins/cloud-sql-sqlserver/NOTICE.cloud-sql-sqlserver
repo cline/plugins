@@ -1,0 +1,8 @@
+Cloud SQL for SQL Server skills for Cline
+
+This plugin includes adapted guidance from the Cloud SQL for SQL Server Agent Skills project by Google LLC:
+- https://github.com/gemini-cli-extensions/cloud-sql-sqlserver
+
+The adapted skill guidance is distributed under Apache-2.0. See LICENSE.cloud-sql-sqlserver in this directory.
+
+The Cline plugin files are modified from the original guidance to remove bundled helper-script execution and to fit Cline's plugin and skill model.
