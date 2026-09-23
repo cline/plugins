@@ -1,0 +1,19 @@
+{
+  "name": "box",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin for Box content, collaboration, AI retrieval, and legal workflow guidance.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
