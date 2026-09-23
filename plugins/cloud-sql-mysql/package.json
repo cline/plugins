@@ -1,0 +1,19 @@
+{
+  "name": "cloud-sql-mysql",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline skill pack for Cloud SQL for MySQL administration, data access, lifecycle, and monitoring workflows.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
