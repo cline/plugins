@@ -1,0 +1,56 @@
+Pigment Skills License v1
+
+1. Definitions
+
+“Pigment” means Pigment SAS and its affiliates.
+“Skills” means the text files, prompts, instructions, examples, and any accompanying materials provided by Pigment that are intended for use in connection with the Services.
+“You” means the individual or entity using the Skills.
+“Services” means Pigment’s products, APIs, MCP servers, and related services.
+
+2. License Grant
+
+Subject to this License, Pigment grants You a limited, non-exclusive, non-transferable, revocable license to use, copy, modify, and distribute the Skills (including modified versions) in connection with the Services.
+
+3. Restrictions
+
+You will not, and will not permit others to:
+Use the Skills to develop, train, improve, or benchmark a model or dataset intended to compete with the Services.
+Use the Skills to build or enhance a competing product or service that provides substantially similar functionality to the Services.
+Remove or alter copyright, trademark, or attribution notices in the Skills.
+Represent modified Skills as official or endorsed by Pigment.
+Distribute the Skills (including modified versions) without retaining all applicable copyright, trademark, and attribution notices included in the original Skills.
+Distribute the Skills (including modified versions) without including a copy of this License.
+Distribute modified versions of the Skills without clearly indicating that changes were made and that such modifications are not endorsed by Pigment.
+
+4. Ownership
+
+The Skills are licensed, not sold. Pigment retains all rights, title, and interest in and to the Skills, including all intellectual property rights.
+
+5. Feedback
+
+If You provide suggestions, ideas, or feedback about the Skills or Services (“Feedback”), You grant Pigment a perpetual, irrevocable, worldwide, royalty-free right to use and incorporate Feedback into its products and services without any obligation.
+
+6. No Warranty
+
+THE SKILLS ARE PROVIDED “AS IS” AND “AS AVAILABLE.” PIGMENT DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+You are responsible for evaluating outputs produced using the Skills, including for accuracy, safety, and compliance.
+
+7. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, PIGMENT WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, REVENUE, DATA, OR GOODWILL, ARISING OUT OF OR RELATED TO THE SKILLS OR THIS LICENSE. IN ALL CASES, PIGMENT’S TOTAL LIABILITY UNDER THIS LICENSE WILL NOT EXCEED USD $100 (OR THE EQUIVALENT IN LOCAL CURRENCY).
+
+8. Termination
+
+This License is effective until terminated. It will terminate automatically when you stop using the Services or if You breach this License. Upon termination, You must stop using the Skills and delete all copies in Your possession or control, including modified versions.
+
+9. Compliance with Law
+
+You will use the Skills in compliance with applicable laws and regulations, including those related to data protection and export controls.
+
+10. Trademark / No Endorsement
+
+This License does not grant You any rights to use Pigment’s trademarks or branding. You may not imply endorsement by Pigment.
+
+11. Governing Law
+
+This License and any dispute or claim (including non-contractual disputes or claims) arising out of or in connection with it or its subject matter or formation shall be governed by and construed in accordance with the laws of England and Wales. The parties irrevocably agree that the courts of England and Wales shall have exclusive jurisdiction to settle any such dispute or claim.
