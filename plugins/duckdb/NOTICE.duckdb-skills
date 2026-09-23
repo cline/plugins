@@ -1,0 +1,9 @@
+This plugin includes Cline-native DuckDB workflow guidance derived from DuckDB Foundation's MIT-licensed duckdb-skills materials.
+
+Upstream copyright:
+Copyright 2018-2025 Stichting DuckDB Foundation
+
+Notable Cline-specific changes:
+- Uses Cline skills instead of slash-command argument templates.
+- Omits session-log memory search.
+- Adds Cline-specific safety guidance for local files, persistent state, installs, secrets, and remote scans.
