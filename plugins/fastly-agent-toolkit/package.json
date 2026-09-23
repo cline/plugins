@@ -1,0 +1,19 @@
+{
+  "name": "fastly-agent-toolkit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles Fastly platform, CLI, VCL, Compute, and NGWAF skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
