@@ -17,6 +17,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | Plugin | What it adds |
 | --- | --- |
 | `agent-browser` | Web and Electron browser automation via the agent-browser CLI skill. |
+| `ai-plugins` | Endor Labs MCP tools and setup guidance for software supply-chain security scans. |
 | `agents-squad` | Background subagents with presets, skills, and shared handoffs. |
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
