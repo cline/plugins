@@ -1,0 +1,20 @@
+{
+  "name": "supabase",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles Supabase MCP and Supabase/Postgres skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}
