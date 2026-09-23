@@ -1,0 +1,184 @@
+---
+description: Detect global state and Lambda warm start tenant isolation risks in Forge RuntimeV2
+globs:
+alwaysApply: false
+---
+
+Context
+
+- Forge RuntimeV2 uses AWS Lambda which reuses runtime instances (warm starts). Module-level variables and global state persist across invocations, potentially from different tenants.
+- Related CWE: CWE-668 (Exposure of Resource to Wrong Sphere), CWE-1189 (Improper Isolation of Shared Resources).
+- Critical for multi-tenant Marketplace apps.
+
+RuntimeV2 Behavior
+
+```
+---------------------------------------
+-           Lambda Container          -
+-  ----------------------------------- -
+-  -        Warm Start Reuse         - -
+-  -  ------------------------------- - -
+-  -  -  Invocation 1 (Tenant A)    - - -
+-  -  -  Sets: globalCache.data     - - -
+-  -  ------------------------------- - -
+-  -              v                   - -
+-  -  ------------------------------- - -
+-  -  -  Invocation 2 (Tenant B)    - - -
+-  -  -  Reads: globalCache.data    - - - <- TENANT LEAK!
+-  -  ------------------------------- - -
+-  ----------------------------------- -
+---------------------------------------
+```
+
+Scope & Signals
+
+- Dangerous patterns:
+  - Module-level variables outside handler functions.
+  - Caches without tenant-scoped keys.
+  - Global configuration objects modified at runtime.
+  - Feature flag caches shared across tenants.
+- Sources: Any tenant-specific data (user info, configurations, API responses).
+- Risk: Data from Tenant A accessible to Tenant B on subsequent invocations.
+
+Vulnerable Patterns
+
+```javascript
+// VULNERABLE - Module-level cache without tenant scoping
+const issueCache = {};  // Persists across Lambda invocations!
+
+export async function handler(payload, context) {
+  const issueId = payload.issueId;
+  
+  if (!issueCache[issueId]) {
+    issueCache[issueId] = await fetchIssue(issueId);
+  }
+  
+  return issueCache[issueId];  // May return data from another tenant
+}
+
+// VULNERABLE - Global configuration
+let appConfig = null;
+
+export async function getConfig(context) {
+  if (!appConfig) {
+    appConfig = await storage.get('config');  // Tenant A's config
+  }
+  return appConfig;  // Tenant B gets Tenant A's config!
+}
+
+// VULNERABLE - Feature flags
+const featureFlags = {};
+
+export async function isFeatureEnabled(feature, context) {
+  if (!featureFlags[feature]) {
+    featureFlags[feature] = await checkFeature(feature);
+  }
+  return featureFlags[feature];
+}
+
+// VULNERABLE - User session/state
+let currentUser = null;
+
+export async function getCurrentUser(context) {
+  if (!currentUser) {
+    currentUser = await fetchUser(context.accountId);
+  }
+  return currentUser;  // Wrong user for subsequent invocations!
+}
+```
+
+Secure Patterns
+
+```javascript
+// SECURE - Tenant-scoped cache keys
+const cache = new Map();
+
+function getCacheKey(tenantId, resourceId) {
+  return `${tenantId}:${resourceId}`;
+}
+
+export async function handler(payload, context) {
+  const tenantId = context.installContext.cloudId;
+  const cacheKey = getCacheKey(tenantId, payload.issueId);
+  
+  if (!cache.has(cacheKey)) {
+    cache.set(cacheKey, await fetchIssue(payload.issueId));
+  }
+  
+  return cache.get(cacheKey);
+}
+
+// SECURE - Fresh state per invocation
+export async function handler(payload, context) {
+  // Create fresh state for each invocation
+  const state = {
+    config: null,
+    user: null
+  };
+  
+  state.config = await storage.get('config');
+  state.user = await fetchUser(context.accountId);
+  
+  return processRequest(payload, state);
+}
+
+// SECURE - Clear cache at invocation start
+export async function handler(payload, context) {
+  // Reset relevant state
+  resetTenantState();
+  
+  // Process with fresh context
+  return await processRequest(payload, context);
+}
+
+function resetTenantState() {
+  issueCache.clear();
+  configCache.clear();
+  userCache.clear();
+}
+
+// SECURE - Use WeakMap with tenant context as key
+const tenantCaches = new WeakMap();
+
+export async function getCache(context) {
+  const tenantKey = { id: context.installContext.cloudId };
+  if (!tenantCaches.has(tenantKey)) {
+    tenantCaches.set(tenantKey, new Map());
+  }
+  return tenantCaches.get(tenantKey);
+}
+```
+
+Detection Checklist
+
+- [ ] Search for `const`, `let`, `var` declarations at module level (outside functions).
+- [ ] Identify objects/maps used as caches without tenant prefixes in keys.
+- [ ] Look for singleton patterns that store tenant-specific data.
+- [ ] Check for `global`, `globalThis` modifications.
+- [ ] Review initialization patterns that cache on first access.
+- [ ] Find memoization without tenant awareness.
+
+PoC / Test Leads
+
+- Make request as Tenant A that populates a cache.
+- Immediately make request as Tenant B and check if Tenant A's data is returned.
+- Store unique marker in global variable, verify persistence across requests.
+- Test with rapid sequential requests to maximize warm start reuse.
+
+Remediation Guidance (advisory)
+
+- Always include tenant identifier (cloudId) in cache keys.
+- Prefer per-invocation state over module-level caching.
+- Clear or reset caches at the start of each invocation.
+- Use Forge Storage API for persistent tenant-scoped data.
+- Avoid module-level variables for anything tenant-specific.
+- Consider short TTLs on caches to limit exposure window.
+
+Reporting Guidance
+
+- Document module-level variables and their contents.
+- Explain the warm start reuse scenario enabling data leakage.
+- Identify what tenant data could be exposed.
+- Provide multi-tenant test scenario.
+- Map to CWE-668, CWE-1189.
+

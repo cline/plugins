@@ -1,0 +1,33 @@
+---
+description: Forge miscellaneous security rules index. Auto-attached for forge-misc/
+globs:
+  - forge-misc/
+alwaysApply: false
+---
+
+- Scope: Software composition, deprecated runtimes, and other security concerns not covered by primary categories.
+
+Subrules
+
+- Software Composition Analysis -> `@forge-misc/software-composition.mdc`
+<!-- - Third-Party Integration Review -> `@forge-misc/third-party-integrations.mdc` -->
+
+Key Miscellaneous Concerns
+
+- Dependencies with known vulnerabilities (CVEs).
+- Deprecated or EOL Node.js runtime versions.
+- External AI integration compliance risks.
+- Undisclosed third-party integrations processing user data.
+
+Detection Heuristics
+
+- Run SCA tools (Snyk, npm audit) on package.json/package-lock.json.
+- Check manifest `app.runtime.name` against Forge-supported versions.
+- Review code and documentation for AI-related imports or API calls.
+- Identify all external services and verify disclosure in privacy/security tab.
+
+CWE References
+
+- CWE-1104: Use of Unmaintained Third Party Components
+- CWE-1395: Dependency on Vulnerable Third-Party Component
+

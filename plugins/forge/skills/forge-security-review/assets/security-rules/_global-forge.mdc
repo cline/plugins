@@ -1,0 +1,102 @@
+---
+description: Global white-box security review guidance for Atlassian Forge app source code
+globs:
+alwaysApply: true
+---
+
+- Use precise, actionable findings with minimal prose. Prefer concrete file paths and cited code snippets; do not propose direct code edits.
+- For each issue, trace data flow explicitly: source (untrusted input) -> validation/sanitization -> sink (dangerous action/API).
+- For each finding, provide: exploitability, impact, practical remediation guidance (advisory only), test leads/PoCs, and references (CWE and Atlassian/Forge docs).
+- Keep guidance Forge-specific: `manifest.yml`, module definitions, resolver handlers, bridge calls, web triggers, remotes, permissions, storage, and external integrations. When available, use the Forge MCP server to retrieve the latest Forge documentation and guidance.
+- Prefer Auto Attached rules for folder-scoped checks and Agent Requested rules for niche vulnerability classes.
+
+Operating mode
+
+- Act as an audit/advisory assistant for white-box Forge security reviews; do not modify app code or provide patch diffs.
+- Focus outputs on:
+  1) Data-flow trace (sources -> validators/sanitizers -> sinks)
+  2) Risk and exploitability analysis
+  3) Reproduction steps and PoC payloads/requests
+  4) Impact and affected files/components
+  5) References (CWE and Forge documentation pages used)
+- When examples are needed, cite existing app code with code citations (start:end:path). Avoid rewriting app code.
+
+Forge analysis checklist
+
+- Locate and review `manifest.yml` first:
+  - `permissions.scopes` for least privilege and stale/redundant scopes.
+  - `permissions.external` and `permissions.content` for egress/CSP risk (`unsafe-inline`, overly broad domains, wildcard misuse).
+  - `modules` entries (`webtrigger`, product modules, function bindings, provider/remotes config).
+  - `remotes` trust boundaries, operations, and data residency declarations when applicable.
+- Build an execution map:
+  - UI Kit/Custom UI entry points -> bridge calls (`invoke`) -> resolver/function handlers.
+  - Atlassian API calls via `api.asUser()` / `api.asApp()`, including permission checks before sensitive mutations.
+  - External network calls and whether destination domains are correctly declared in manifest permissions.
+- Identify authn/authz boundaries:
+  - Verify resolver-side authorization for every sensitive action.
+  - Treat browser-provided context as untrusted for auth decisions.
+  - For `asApp` operations, verify explicit permission checks (for example, Authorize API patterns) before write/delete actions.
+- Enumerate unauthenticated/external entry points:
+  - Web triggers are URLs and may have no built-in auth by default; verify custom auth and replay protections where needed.
+  - Event/scheduled handlers and remote endpoints: confirm only intended operations are exposed.
+
+Forge-specific review priorities
+
+- Below are priority focus areas, not an exhaustive list. Report any additional vulnerability classes discovered.
+- Use this global rule as a baseline and apply all relevant Forge category-specific rules as category rules provide deeper checks and examples.
+- Authentication and authorization
+  - Check app-level scopes vs runtime permission checks; enforce least privilege and deny-by-default logic.
+  - Flag missing object-level authorization (IDOR-like access through issue/content/project identifiers).
+  - Validate tenant/user boundary handling when reading context and performing cross-tenant operations.
+- Tenant isolation and data leakage
+  - Verify tenant context is enforced on every data read/write path, including storage keys, entity queries, SQL access, and remote calls.
+  - Review global cache, module-level state, and global variable reuse at runtime to ensure tenant/user-scoped data cannot bleed across requests, invocations, or installations.
+  - Flag any cross-tenant access path where identifiers from one tenant can read or mutate another tenant's data, including execution of arbitrary code that can interact with global variables or Forge Lambda runtime environment which leads to cross tenant data leakage.
+  - Check for sensitive data exposure in logs, error messages, responses, exports, events, and analytics/telemetry payloads.
+  - Confirm data minimization and redaction for PII, access tokens, credentials, and app secrets across UI, function, and remote boundaries.
+- Input validation and injection
+  - Track untrusted payloads from UI, web triggers, events, and remote callbacks into sinks (queries, templates, command execution, outbound requests).
+  - Verify strict schema validation at resolver and trigger boundaries.
+- Secrets and sensitive data
+  - Flag hard-coded credentials, API keys, or tokens in source/config.
+  - Verify secure secret handling patterns (Forge variables with encryption where applicable); avoid logging secrets or tokens.
+  - Verify storage of credentials/tokens is minimized, scoped, and protected.
+- Egress, remotes, providers and other integrations
+  - Confirm all outbound domains are explicitly allowlisted in manifest permissions.
+  - Flag overly broad external permissions and unsafe CSP relaxations.
+  - Review remote trust assumptions, data residency implications, and token forwarding boundaries.
+- Session-like and request protections
+  - For web triggers and custom endpoints, verify request authentication, integrity checks, anti-replay controls, and abuse protections (rate limiting/throttling).
+
+Mandatory Reporting standards (Hard Requirement)
+
+- The categories below are minimum expected reporting elements, not a limit on what can be reported.
+- When category-specific Forge rules exist, align reporting detail and terminology with those rules in addition to this global baseline.
+- Create a security audit report in markdown summarizing overall security posture with attack surface and entry points; authentication and authorization; tenant isolation and cross-tenant access risk; input validation and injection paths; external egress/remotes and trust boundaries; secret/token/PII handling and leakage vectors; storage/SQL/data lifecycle controls; web trigger and event abuse paths; high-risk sinks and exploit chains; compensating controls; and evidence gaps requiring runtime verification.
+- Score every Confirmed Exploitable Finding with CVSS v3.1 and include:
+  - Vector string (e.g., `CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:L`)
+  - Base score (0.0-10.0)
+  - Severity band (None/Low/Medium/High/Critical)
+  - Metric-by-metric justification tied to code evidence and exploit pathOrder findings by CVSS severity and security impact.
+  - Order findings by CVSS severity and security impact, if two findings have the same CVSS, place the one with greater real-world business/security impact first.
+- Do not report a finding without code evidence where possible: include file path, function/symbol, and code snippet proving source-to-sink reachability and the missing/insufficient control.
+- Mandatory Reproducible PoC Format (Hard Requirement)
+  - For each finding, include a reproducible dynamic test plan and clear PoC in numbered steps: setup, exact execution commands/requests, actual request payloads such as forge graphql query, success criteria, expected vulnerable behavior, and the secure/expected behavior for comparison.
+  - provide copy-pasteable commands (no pseudocode), using at least one of:
+    - `curl` request(s), or
+    - `forge` CLI command(s), `invokeExtension` GraphQL payload or
+    - a complete Proof of Concept script (such as `poc.js`)
+  - include full request path, method, headers, and body
+  - include concrete payload values; if unknown, first provide exact discovery command(s) to obtain them, then provide final command(s) with placeholders clearly labeled as runtime values.
+- Do not label logging/error handling risk, hardening advice, or telemetry/privacy concerns as vulnerabilities unless exploitability is demonstrated. Instead, report them under Security Concerns (Needs Validation) section after Confirmed Exploitable Findings. 
+  - However, avoid under-reporting critical classes (RCE, SQLi, XSS, hardcoded secret, SSRF).
+- Call out assumptions, unknowns, and evidence gaps that require runtime verification.
+- Advice for further testing and avoid making direct edits to code with remediation. Avoid speculative or overbroad changes.
+- Ignore test files with security vulnerabilities that aren't exploitable.
+- For dependency findings, include: package, installed version, vulnerable range, fixed version/no-fix status, upgrade path, severity, and CVE/GHSA/CWE references with file-path evidence.
+- Any generated outputs/scanner artifacts MUST be stored under `security-audit-artifacts/` i.e. in a single dedicated subdirectory, never in repository root.
+
+Notes
+
+- Nested rules in subdirectories should auto-attach when files in those folders are in scope.
+- Keep rule files focused and concise; split large topics into dedicated subrules under Forge domains.

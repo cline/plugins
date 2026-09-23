@@ -1,0 +1,212 @@
+---
+description: Static analysis tools and patterns for Forge app security review
+globs:
+alwaysApply: false
+---
+
+Context
+
+- Static analysis for Forge apps requires Forge-specific rules in addition to standard JavaScript/TypeScript scanning.
+- Key tools: FSRT (Forge Static Review Tool), Semgrep, Snyk, ESLint security plugins.
+
+Forge-Specific SAST Tools
+
+Semgrep for Forge
+
+```bash
+# Install semgrep
+brew install semgrep  # macOS
+# or
+pip install semgrep
+
+# Run with JavaScript security rules
+semgrep --config p/javascript > semgrep-js.json
+semgrep --config p/typescript > semgrep-ts.json
+semgrep --config p/nodejsscan > semgrep-node.json
+
+# Run with custom Forge rules
+semgrep --config ./forge-rules/ > semgrep-forge.json
+```
+
+Custom Semgrep Rules for Forge
+
+```yaml
+# forge-sql-injection.yaml
+rules:
+  - id: forge-sql-injection-executeraw
+    patterns:
+      - pattern-either:
+          - pattern: sql.executeRaw(`... ${$VAR} ...`)
+          - pattern: sql.executeRaw("..." + $VAR + "...")
+    message: "SQL injection risk in sql.executeRaw - use bindParams"
+    severity: ERROR
+    languages: [javascript, typescript]
+
+  - id: forge-sql-injection-prepare
+    patterns:
+      - pattern: sql.prepare(`... ${$VAR} ...`).execute()
+    message: "SQL injection risk - prepare without bindParams"
+    severity: ERROR
+    languages: [javascript, typescript]
+
+  - id: forge-asapp-no-authz
+    patterns:
+      - pattern: |
+          resolver.define($NAME, async ({ payload, context }) => {
+            ...
+            const $API = asApp();
+            ...
+          })
+      - pattern-not: |
+          resolver.define($NAME, async ({ payload, context }) => {
+            ...
+            if (...) { throw ... }
+            ...
+            const $API = asApp();
+            ...
+          })
+    message: "asApp() without apparent authorization check"
+    severity: WARNING
+    languages: [javascript, typescript]
+
+  - id: forge-dangerouslysetinnerhtml
+    pattern: dangerouslySetInnerHTML={{ __html: $VAR }}
+    message: "dangerouslySetInnerHTML - verify XSS sanitization"
+    severity: WARNING
+    languages: [javascript, typescript]
+
+  - id: forge-dynamic-code-execution
+    patterns:
+      - pattern-either:
+          - pattern: new Function(...)
+          - pattern: new AsyncFunction(...)
+          - pattern: eval(...)
+    message: "Dynamic code execution - high RCE risk"
+    severity: ERROR
+    languages: [javascript, typescript]
+```
+
+Snyk for SCA
+
+```bash
+# Scan dependencies for vulnerabilities
+snyk test --severity-threshold=low --json > snyk-results.json
+
+# Key checks:
+# - Known CVEs in dependencies
+# - Outdated packages
+# - License compliance
+```
+
+Analysis Workflow
+
+```bash
+# 1. Manifest Analysis
+cat manifest.yml | yq '.permissions'
+# Check scopes, external permissions, CSP
+
+# 2. FSRT Scan
+fsrt scan --path . --output fsrt-results.json
+
+# 3. Semgrep Scan
+semgrep --config p/javascript --config p/typescript \
+  --config ./forge-rules/ --json > semgrep-results.json
+
+# 4. Dependency Scan
+snyk test --json > snyk-results.json
+npm audit --json > npm-audit.json
+
+# 5. Secret Scanning
+gitleaks detect --source . --report-format json > secrets.json
+
+# 6. Triage and Correlate
+# Combine results, remove duplicates, prioritize
+```
+
+Detection Patterns Summary
+
+| Category | Pattern | Tool |
+|----------|---------|------|
+| SQL Injection | `sql.executeRaw(\`...${}\`)` | Semgrep |
+| XSS | `dangerouslySetInnerHTML` + unsafe-inline | Semgrep + Manifest |
+| RCE | `new Function()`, `eval()` | Semgrep |
+| AuthZ | `asApp()` without checks | FSRT, Semgrep |
+| Secrets | Basic auth, API keys | Gitleaks, FSRT |
+| Dependencies | CVEs in node_modules | Snyk, npm audit |
+
+False Positive Reduction
+
+```yaml
+# Exclude test files
+semgrep --exclude='/test/' --exclude='/*.test.*'
+
+# Exclude node_modules
+semgrep --exclude='/node_modules/'
+
+# Exclude webpack output
+semgrep --exclude='/webpack/' --exclude='/dist/'
+
+# Exclude bundled/minified files
+semgrep --exclude='/*.min.js' --exclude='/bundled/'
+```
+
+Triage Guidance
+
+```
+1. Critical Priority:
+   - SQL injection with user input
+   - RCE via dynamic code execution
+   - Hardcoded production secrets
+   - asApp without authorization
+
+2. High Priority:
+   - XSS with unsafe-inline CSP
+   - Prototype pollution
+   - Web trigger without auth
+   - Global state tenant isolation
+
+3. Medium Priority:
+   - Excessive scopes
+   - Wildcard external permissions
+   - Missing input validation
+   - Secrets in logs
+
+4. Low Priority:
+   - Informational findings
+   - Best practice deviations
+   - Unused code patterns
+```
+
+Reporting Template
+
+```markdown
+## Finding: [Title]
+- Severity: Critical/High/Medium/Low
+- Category: SQLi/XSS/AuthZ/etc.
+- Tool: Semgrep/FSRT/Snyk
+- File: path/to/file.js
+- Line: 42
+- Pattern: `sql.executeRaw(\`SELECT * FROM users WHERE id = ${userId}\`)`
+- Data Flow: payload.userId -> resolver -> sql.executeRaw
+- CWE: CWE-89
+- Remediation: Use sql.prepare with bindParams
+```
+
+Reporting Requirements
+
+```text
+For npm audit and snyk, deduplicated analysis report per unique vuln, ensure you print:
+- package name
+- installed/resolved vulnerable version
+- vulnerable semver range
+- fixed version(s) or explicit "no fix available"
+- upgrade path (direct/transitive)
+- severity, CVE/GHSA/CWE
+- evidence path from lockfile and scanner JSON
+Do not return only counts when vulnerabilities exist.
+
+All generated scan outputs MUST be written under a single directory:
+  `/security-audit-artifacts/`
+- NEVER write outputs or scanner artifacts to project root.
+```
+

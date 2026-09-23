@@ -1,0 +1,59 @@
+---
+description: Forge egress and remotes rules index. Auto-attached for forge-egress-remotes/
+globs:
+  - forge-egress-remotes/
+alwaysApply: false
+---
+
+- Scope: External network permissions, remote configurations, egress controls, and data exfiltration risks.
+- Priority: External integrations are a common attack surface for SSRF and data leakage.
+
+Key Forge Egress/Remote Risks
+
+- Wildcard external permissions: Using `*` or overly broad wildcards in `permissions.external.fetch`.
+- Data egress via window.location: Custom UI can redirect with sensitive data in URL parameters.
+- Undeclared external domains: Outbound calls to domains not in manifest permissions.
+- Remote backend trust: Trusting external remotes without proper authentication/validation.
+- SSRF via user-controlled URLs: Building fetch URLs from untrusted input.
+
+Subrules
+
+- Wildcard External Permissions -> `@forge-egress-remotes/wildcard-permissions.mdc`
+- Data Egress via Redirects -> `@forge-egress-remotes/data-egress-redirects.mdc`
+<!-- - External Domain Validation -> `@forge-egress-remotes/external-domain-validation.mdc`
+- Remote Backend Security -> `@forge-egress-remotes/remote-backend-security.mdc` -->
+
+Detection Heuristics
+
+- Check manifest `permissions.external.fetch` for wildcards or overly broad patterns.
+- Search for `window.location`, `location.href`, `location.assign()` with dynamic URLs containing query params.
+- Trace fetch/request calls to verify destinations match declared permissions.
+- Review remote configurations for authentication and data residency declarations.
+
+Manifest Permission Patterns
+
+```yaml
+# INSECURE - overly broad
+permissions:
+  external:
+    fetch:
+      backend:
+        - '*.example.com'  # Wildcard subdomain risk
+        - '*'              # Never acceptable
+
+# SECURE - explicit domains
+permissions:
+  external:
+    fetch:
+      backend:
+        - 'api.example.com'
+        - 'auth.example.com'
+```
+
+CWE References
+
+- CWE-918: Server-Side Request Forgery
+- CWE-441: Unintended Proxy or Intermediary
+- CWE-942: Permissive Cross-domain Policy
+- CWE-201: Insertion of Sensitive Information Into Sent Data
+

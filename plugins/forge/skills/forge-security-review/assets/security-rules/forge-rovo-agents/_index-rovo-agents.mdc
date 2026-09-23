@@ -1,0 +1,69 @@
+---
+description: Forge Rovo agents rules index. Auto-attached for forge-rovo-agents/
+globs:
+  - forge-rovo-agents/
+alwaysApply: false
+---
+
+- Scope: Security considerations specific to Forge Rovo agents, actions, and LLM-driven functionality.
+- Priority: Emerging attack surface with unique privilege escalation and injection risks.
+
+Key Forge Rovo Agent Risks
+
+- A4J running with elevated privileges: Agents executing actions with asApp() without proper authorization checks.
+- Known AuthZ gap (AGRC-15320): Agents can execute actions with higher privileges than intended.
+- LLM-generated URL risks: SSRF and data egress when agents render or fetch LLM-generated URLs.
+- Browser context consumption: Agents consuming user-controlled browser context URLs.
+- Cross-site/cross-product access: Custom agents providing unintended access across products.
+- App access rules bypass: Forge agents may not respect app access restriction rules.
+
+Subrules
+
+- Agent Privilege Escalation -> `@forge-rovo-agents/agent-privilege-escalation.mdc`
+- LLM Output Injection -> `@forge-rovo-agents/llm-output-injection.mdc`
+<!-- - Agent Action Authorization -> `@forge-rovo-agents/agent-action-authz.mdc`
+- Cross-Product Access Controls -> `@forge-rovo-agents/cross-product-access.mdc` -->
+- Prefer Using Function Context Object -> `@forge-authn-authz/prefer-context-authz.mdc`
+  - Use this rule if any agents have declared `actions` keys under `modules.rovo:agent` entries in their manifest
+
+Detection Heuristics
+
+- Identify Rovo action modules in manifest and their associated functions.
+- Check for `asApp()` usage in agent actions without explicit permission validation.
+- Look for URL handling from LLM outputs without validation.
+- Review agent configurations for cross-product scope declarations.
+
+Rovo-Specific Caveats
+
+- Rovo Forge Actions documentation lacks guidance on asUser vs asApp (unlike regular Forge Actions).
+- Authorization checks must happen before Forge function invocation; Convo AI should not allow unauthorized actions on restricted content.
+- Browser context URLs are user-controlled and must not be trusted.
+
+Agent Authorization Pattern
+
+```javascript
+// INSECURE - asApp without checks
+export async function agentAction(payload) {
+  const api = asApp();
+  await api.requestJira(route`/rest/api/3/issue/${payload.issueId}`);
+}
+
+// SECURE - verify permissions first
+export async function agentAction(payload, context) {
+  // Verify the requesting user has permission
+  const hasPermission = await checkUserPermission(context.accountId, payload.issueId);
+  if (!hasPermission) {
+    throw new Error('Unauthorized');
+  }
+  const api = asApp();
+  await api.requestJira(route`/rest/api/3/issue/${payload.issueId}`);
+}
+```
+
+CWE References
+
+- CWE-862: Missing Authorization
+- CWE-918: Server-Side Request Forgery
+- CWE-74: Improper Neutralization of Special Elements (Injection)
+- CWE-269: Improper Privilege Management
+

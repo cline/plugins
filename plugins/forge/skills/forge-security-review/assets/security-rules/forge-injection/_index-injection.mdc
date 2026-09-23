@@ -1,0 +1,44 @@
+---
+description: Forge injection rules index. Auto-attached for forge-injection/
+globs:
+  - forge-injection/
+alwaysApply: false
+---
+
+- Scope: Injection vulnerabilities due to lack of input validation in Forge apps including SQL, command, XSS, prototype pollution, and code execution.
+- Priority: Injection vulnerabilities are the #2 category for P1 severity findings.
+
+Key Forge Injection Risks
+
+- SQL injection via `sql.executeRaw()` or `sql.prepare()` without `bindParams()`.
+- Command/code execution via `AsyncFunction`, `Function()`, `eval()` constructors with user input.
+- XSS when `unsafe-inline` CSP is enabled and usage of high risk attributes such as `dangerouslySetInnerHTML`.
+- Prototype pollution in RuntimeV2.
+- SSRF with user-controlled route segments.
+
+Subrules
+
+- SQL Injection -> `@forge-injection/sql-injection.mdc`
+- Remote Code Execution -> `@forge-injection/rce-code-execution.mdc`
+- Cross-Site Scripting -> `@forge-injection/xss.mdc`
+- Prototype Pollution -> `@forge-injection/prototype-pollution.mdc`
+- SSRF and Request Forgery -> `@forge-injection/ssrf.mdc`
+<!-- - Template Injection -> `@forge-injection/template-injection.mdc` -->
+
+Detection Heuristics
+
+- Trace untrusted input from resolvers, web triggers, and events into query/command sinks.
+- Search for string interpolation/concatenation in SQL calls.
+- Identify `AsyncFunction`, `new Function()`, `eval()` with dynamic input.
+- Check `dangerouslySetInnerHTML` usage when `unsafe-inline` is in manifest CSP.
+- Look for `requestJira`/`requestConfluence` calls without `route` template literals.
+
+CWE References
+
+- CWE-89: SQL Injection
+- CWE-78: OS Command Injection
+- CWE-79: Cross-Site Scripting
+- CWE-94: Code Injection
+- CWE-1321: Prototype Pollution
+- CWE-918: Server-Side Request Forgery
+
