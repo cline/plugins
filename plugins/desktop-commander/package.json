@@ -1,0 +1,23 @@
+{
+  "name": "desktop-commander",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin for Desktop Commander MCP workflows across persistent shells, processes, filesystem access, and structured documents.",
+  "dependencies": {
+    "@wonderwhy-er/desktop-commander": "0.2.42"
+  },
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills",
+          "mcp"
+        ]
+      }
+    ]
+  }
+}
