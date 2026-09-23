@@ -1,0 +1,106 @@
+{
+  "name": "@shopify/ui-extensions-react",
+  "version": "2025.7.4",
+  "description": "React bindings for @shopify/ui-extensions",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
+  "sideEffects": false,
+  "license": "MIT",
+  "main": "index.js",
+  "module": "index.mjs",
+  "esnext": "index.esnext",
+  "types": "./build-files/ts/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "admin": [
+        "./build-files/ts/surfaces/admin.d.ts"
+      ],
+      "checkout": [
+        "./build-files/ts/surfaces/checkout.d.ts"
+      ],
+      "customer-account": [
+        "./build-files/ts/surfaces/customer-account.d.ts"
+      ],
+      "point-of-sale": [
+        "./build-files/ts/surfaces/point-of-sale.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./build-files/ts/index.d.ts",
+      "esnext": "./index.esnext",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./admin": {
+      "types": "./build-files/ts/surfaces/admin.d.ts",
+      "esnext": "./build-files/esnext/surfaces/admin.esnext",
+      "import": "./build-files/esm/surfaces/admin.mjs",
+      "require": "./build-files/cjs/surfaces/admin.js"
+    },
+    "./checkout": {
+      "types": "./build-files/ts/surfaces/checkout.d.ts",
+      "esnext": "./build-files/esnext/surfaces/checkout.esnext",
+      "import": "./build-files/esm/surfaces/checkout.mjs",
+      "require": "./build-files/cjs/surfaces/checkout.js"
+    },
+    "./customer-account": {
+      "types": "./build-files/ts/surfaces/customer-account.d.ts",
+      "esnext": "./build-files/esnext/surfaces/customer-account.esnext",
+      "import": "./build-files/esm/surfaces/customer-account.mjs",
+      "require": "./build-files/cjs/surfaces/customer-account.js"
+    },
+    "./point-of-sale": {
+      "types": "./build-files/ts/surfaces/point-of-sale.d.ts",
+      "esnext": "./build-files/esnext/surfaces/point-of-sale.esnext",
+      "import": "./build-files/esm/surfaces/point-of-sale.mjs",
+      "require": "./build-files/cjs/surfaces/point-of-sale.js"
+    }
+  },
+  "dependencies": {
+    "@remote-ui/async-subscription": "^2.1.16",
+    "@remote-ui/react": "^5.0.6",
+    "@types/react": ">=18.2.67"
+  },
+  "peerDependencies": {
+    "@shopify/ui-extensions": "2025.7.4",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@shopify/ui-extensions": {
+      "optional": false
+    },
+    "react": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@quilted/react-testing": "^0.5.31",
+    "@shopify/ui-extensions": "2025.7.4",
+    "react": "^18.0.0",
+    "react-reconciler": "0.29.0",
+    "react-test-renderer": "^18.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/ui-extensions.git",
+    "directory": "packages/ui-extensions"
+  },
+  "files": [
+    "build",
+    "src",
+    "index.*",
+    "checkout.*",
+    "README.md"
+  ],
+  "eslintConfig": {
+    "rules": {
+      "@shopify/strict-component-boundaries": "off",
+      "react/react-in-jsx-scope": "off"
+    }
+  }
+}
