@@ -1,0 +1,16 @@
+{
+  "name": "uizze",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Stop UI slop with a free UIZZE finish gate and optional MCP setup guidance.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ]
+      }
+    ]
+  }
+}
