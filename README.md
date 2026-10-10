@@ -28,6 +28,8 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `goal` | Completion nudges for active goals with a slash command and completion tool. |
 | `intercom-support-triage-slack` | Intercom conversation triage tools for support workflows. |
 | `jev-browser` | Fast browser goal execution with Jev through Vercel AI Gateway, screenshots, and isolated Chromium sessions. |
+| `jev-guard` | A Jev hook that screens tool results against plain-language checks you test on a local page. |
+| `jev-playground` | A local page for asking Jev yes/no, pick-one, and scale questions that Cline sets up for you. |
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |

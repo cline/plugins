@@ -1,0 +1,75 @@
+{
+  "name": "Hiring: next round",
+  "about": "This playground helps a hiring team decide whether a candidate should move to the next interview round.",
+  "inputs": [
+    {
+      "label": "Role and level",
+      "value": "Senior backend engineer",
+      "hint": "The job being hired for"
+    },
+    {
+      "label": "Interview rounds completed",
+      "value": "Phone screen and one technical interview",
+      "hint": "What the candidate has done so far"
+    },
+    {
+      "label": "Evidence from interviews",
+      "value": "Strong coding, clear explanations, weak on system design trade-offs",
+      "hint": "What interviewers actually observed"
+    },
+    {
+      "label": "Bar this team needs to clear",
+      "value": "Must own services end to end and mentor two juniors",
+      "hint": "What the role really demands"
+    },
+    {
+      "label": "Open concerns or gaps",
+      "value": "No production on-call experience; notice period is 90 days",
+      "hint": "Anything still unresolved"
+    }
+  ],
+  "questions": [
+    {
+      "id": "next_round",
+      "type": "noul",
+      "question": "Should this candidate move to the next round?",
+      "yes_means": "Advance them to the next round.",
+      "no_means": "Do not advance them."
+    },
+    {
+      "id": "next_step",
+      "type": "choice",
+      "question": "What should the hiring team do next?",
+      "options": [
+        {
+          "name": "Advance",
+          "meaning": "Book the next round now"
+        },
+        {
+          "name": "Extra interview",
+          "meaning": "Run one focused interview on the weak area"
+        },
+        {
+          "name": "Hold",
+          "meaning": "Pause and compare against other candidates"
+        },
+        {
+          "name": "Decline",
+          "meaning": "Send a rejection"
+        }
+      ]
+    },
+    {
+      "id": "readiness",
+      "type": "score",
+      "question": "How ready is this candidate for this role today?",
+      "levels": [
+        "Not ready",
+        "Needs work",
+        "Borderline",
+        "Ready",
+        "Strong yes"
+      ]
+    }
+  ]
+}

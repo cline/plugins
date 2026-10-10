@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Jev playground</title>
+<style>
+	:root {
+		--bg: #f6f6f3;
+		--panel: #ffffff;
+		--line: #e3e3de;
+		--line-strong: #cfcfc8;
+		--ink: #1d1d1b;
+		--muted: #6d6d67;
+		--faint: #a3a39c;
+		--accent: #2b59c3;
+		--accent-soft: #e9eefa;
+		--danger: #b3261e;
+		--danger-soft: #fbeceb;
+		--radius: 8px;
+	}
+	* { box-sizing: border-box; }
+	html, body { margin: 0; height: 100%; }
+	body {
+		font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+		color: var(--ink);
+		background: var(--bg);
+		-webkit-font-smoothing: antialiased;
+		display: grid;
+		grid-template-rows: auto 1fr;
+	}
+	button, input, textarea, select { font: inherit; color: inherit; }
+	.num { font-variant-numeric: tabular-nums; }
+
+	header {
+		display: flex; align-items: center; gap: 12px;
+		padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+	}
+	header .brand { font-weight: 600; letter-spacing: -0.01em; }
+	header .name {
+		flex: 1; max-width: 420px; border: 1px solid transparent; background: transparent;
+		padding: 4px 8px; border-radius: 6px; font-weight: 500;
+	}
+	header .name:hover { border-color: var(--line); }
+	header .name:focus { outline: none; border-color: var(--accent); background: var(--panel); }
+	header .saved { color: var(--faint); font-size: 12px; }
+
+	main { display: grid; grid-template-columns: 200px minmax(420px, 520px) 1fr; min-height: 0; }
+	main > section { overflow: auto; min-height: 0; }
+
+	.rail { border-right: 1px solid var(--line); padding: 12px 8px; }
+	.rail h2, .col h2 {
+		font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+		color: var(--muted); font-weight: 600; margin: 4px 8px 8px;
+	}
+	.rail a {
+		display: block; padding: 6px 8px; border-radius: 6px; color: var(--ink);
+		text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	}
+	.rail a:hover { background: #ececE7; }
+	.rail a.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+
+	.setup { border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 0; }
+	.setup .scroll { flex: 1; overflow: auto; padding: 16px 18px 28px; }
+	.setup .footer {
+		display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+		border-top: 1px solid var(--line); background: var(--panel);
+	}
+	.hint { color: var(--muted); font-size: 12px; margin: 0; }
+
+	.intro { margin-bottom: 20px; }
+	.about { font-size: 15px; margin: 0 0 10px; }
+	.steps { margin: 0; padding-left: 20px; color: var(--muted); font-size: 13px; }
+	.steps li { margin-bottom: 2px; }
+	.section { margin-top: 24px; }
+	.section-head { margin-bottom: 10px; }
+	.section-head h3 { font-size: 16px; margin: 0 0 2px; letter-spacing: -0.01em; }
+
+	.card {
+		background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+		padding: 10px 12px 12px; margin-bottom: 10px;
+	}
+	.card-head { display: grid; grid-template-columns: 1fr auto 24px; gap: 6px; align-items: center; margin-bottom: 6px; }
+	.card-head:has(> :nth-child(2):last-child) { grid-template-columns: 1fr 24px; }
+	.card-title { font-size: 12px; font-weight: 600; color: var(--muted); }
+	.card-hint { margin: -2px 0 8px; }
+	.caption { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+	.labeled { display: block; }
+	.keyline { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+	.keyline .caption { margin: 0; white-space: nowrap; color: var(--faint); }
+	input.box, textarea.box {
+		width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--panel);
+		padding: 6px 8px; transition: border-color 120ms ease;
+	}
+	input.box:hover, textarea.box:hover { border-color: var(--line-strong); }
+	input.box:focus, textarea.box:focus { outline: none; border-color: var(--accent); }
+	textarea.box { resize: none; overflow: hidden; min-height: 34px; }
+	input.box.title-box { border-color: transparent; background: transparent; padding: 2px 0; font-weight: 600; }
+	input.box.title-box:hover { border-color: transparent; }
+	input.box.title-box:focus { border-color: transparent; box-shadow: inset 0 -1px 0 var(--accent); }
+	textarea.box.question-box { font-size: 15px; font-weight: 500; }
+	input.box.key-box { border-color: transparent; background: transparent; color: var(--faint); padding: 2px 4px; }
+	input.box.key-box:hover, input.box.key-box:focus { border-color: var(--line); color: var(--ink); }
+	input.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+
+	.icon {
+		width: 24px; height: 32px; border: 0; background: transparent; color: var(--faint);
+		border-radius: 6px; cursor: pointer; font-size: 16px; line-height: 1;
+	}
+	.icon:hover { color: var(--danger); background: var(--danger-soft); }
+	.add {
+		border: 1px dashed var(--line-strong); background: transparent; color: var(--muted);
+		border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px;
+	}
+	.add:hover { color: var(--accent); border-color: var(--accent); }
+
+	.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+	.seg button {
+		border: 0; background: var(--panel); padding: 4px 9px; font-size: 12px; cursor: pointer; color: var(--muted);
+	}
+	.seg button + button { border-left: 1px solid var(--line); }
+	.seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+	.sub { margin-top: 6px; }
+	.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+	.opt-row { display: grid; grid-template-columns: 150px 1fr 24px; gap: 6px; margin-bottom: 4px; }
+	.opt-row.captions { margin-bottom: 0; }
+	.lvl-row { display: grid; grid-template-columns: 22px 1fr 24px; gap: 6px; margin-bottom: 4px; align-items: center; }
+	.lvl-row .idx { color: var(--faint); font-size: 12px; text-align: right; }
+
+	.ask {
+		border: 0; background: var(--accent); color: #fff; font-weight: 600;
+		padding: 8px 18px; border-radius: 7px; cursor: pointer;
+		transition: transform 80ms ease, opacity 120ms ease;
+	}
+	.ask:active { transform: scale(0.97); }
+	.ask:disabled { opacity: 0.55; cursor: default; }
+
+	.answers { padding: 12px 20px 32px; }
+	.banner { border-radius: var(--radius); padding: 10px 12px; margin-bottom: 12px; font-size: 13px; }
+	.banner.error { background: var(--danger-soft); color: var(--danger); }
+	.banner.info { background: var(--accent-soft); color: var(--accent); }
+	.banner ul { margin: 4px 0 0; padding-left: 18px; }
+	.meta { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
+	.meta .stale { color: #9a6700; }
+	.empty { color: var(--muted); padding: 40px 0; text-align: center; }
+
+	.acard {
+		background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+		padding: 14px 16px; margin-bottom: 12px;
+	}
+	.acard .qtext { font-weight: 500; margin-bottom: 2px; }
+	.headline { display: flex; align-items: baseline; gap: 10px; margin: 8px 0 10px; }
+	.headline .big { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+	.delta { font-size: 12px; color: var(--muted); }
+	.says { font-size: 13px; color: var(--ink); }
+	.empty .legend { text-align: left; display: inline-block; margin: 8px 0 0; padding-left: 18px; font-size: 13px; }
+	.empty .legend li { margin-bottom: 4px; }
+
+	.track { position: relative; height: 10px; background: #eeeeea; border-radius: 5px; }
+	.track .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 5px; transition: width 300ms ease; }
+	.track .mid { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 1px; background: var(--line-strong); }
+	.ghost { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); opacity: 0.35; border-radius: 1px; }
+	.ends { display: flex; justify-content: space-between; gap: 16px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+	.ends span:last-child { text-align: right; }
+
+	.choice-row { display: grid; grid-template-columns: minmax(90px, 180px) 1fr 44px; gap: 10px; align-items: center; margin-bottom: 8px; }
+	.choice-row .cname { font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+	.choice-row .cmeaning { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+	.choice-row .track .fill { background: #b9c7ea; }
+	.choice-row.win .track .fill { background: var(--accent); }
+	.choice-row .pct { text-align: right; font-size: 13px; }
+
+	.hist { display: grid; gap: 6px; align-items: end; height: 56px; margin-top: 4px; }
+	.hist .col { background: #d5ddf3; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 300ms ease; }
+	.hist .col.top { background: var(--accent); }
+	.scale { position: relative; margin-top: 8px; height: 10px; background: #eeeeea; border-radius: 5px; }
+	.scale .marker {
+		position: absolute; top: -5px; width: 20px; height: 20px; margin-left: -10px;
+		border-radius: 50%; background: var(--accent); border: 3px solid var(--panel);
+		box-shadow: 0 0 0 1px var(--accent); transition: left 300ms ease;
+	}
+	.levels { display: grid; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--muted); text-align: center; }
+
+	details.raw { margin-top: 16px; }
+	details.raw summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+	details.raw pre {
+		background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+		padding: 12px; font-size: 12px; overflow: auto; max-height: 360px;
+	}
+	.copy { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 3px 9px; font-size: 12px; cursor: pointer; }
+	.copy:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+	<span class="brand">Jev playground</span>
+	<input class="name" id="name" aria-label="Bucket name" placeholder="Bucket name">
+	<span class="saved" id="saved"></span>
+</header>
+<main>
+	<section class="rail">
+		<h2>Buckets</h2>
+		<nav id="buckets"></nav>
+		<div style="padding: 8px"><button class="add" id="new-bucket">New bucket</button></div>
+	</section>
+	<section class="setup">
+		<div class="scroll" id="setup"></div>
+		<div class="footer">
+			<button class="ask" id="ask">Ask Jev</button>
+			<span class="hint" id="ask-hint">or press Cmd+Enter</span>
+		</div>
+	</section>
+	<section class="answers col" id="answers"></section>
+</main>
+<script>
+const SAVE_DELAY_MS = 500;
+const TYPES = [
+	{ type: "noul", label: "Yes / no" },
+	{ type: "choice", label: "Pick one" },
+	{ type: "score", label: "Scale" },
+];
+const TYPE_SEEDS = {
+	noul: () => ({}),
+	choice: () => ({ options: [{ name: "", meaning: "" }, { name: "", meaning: "" }] }),
+	score: () => ({ levels: ["low", "medium", "high"] }),
+};
+
+const view = { slug: null, bucket: null, buckets: [], isRunning: false, attempt: null, isEditedSinceRun: false, saveTimer: null };
+
+// Builds a DOM node; children that are strings become text, so user text is never parsed as HTML.
+function el(tag, props = {}, ...children) {
+	const node = document.createElement(tag);
+	for (const [key, value] of Object.entries(props)) {
+		if (key === "class") node.className = value;
+		else if (key === "style" || key === "role" || key.startsWith("aria-")) node.setAttribute(key, value);
+		else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+		else node[key] = value;
+	}
+	for (const child of children.flat(Infinity)) {
+		if (child !== null && child !== undefined && child !== false) node.append(child);
+	}
+	return node;
+}
+
+async function api(path, options = {}) {
+	const response = await fetch(path, { headers: { "Content-Type": "application/json" }, ...options });
+	const payload = await response.json();
+	if (!response.ok) throw new Error(payload.error ?? `HTTP ${response.status}`);
+	return payload;
+}
+
+function growTextarea(area) {
+	area.style.height = "auto";
+	area.style.height = `${area.scrollHeight + 2}px`;
+}
+
+// Edits write straight into the bucket object; only structural changes re-render.
+function edited({ isStructural = false } = {}) {
+	view.isEditedSinceRun = true;
+	if (isStructural) renderSetup();
+	renderMeta();
+	clearTimeout(view.saveTimer);
+	document.getElementById("saved").textContent = "Saving";
+	view.saveTimer = setTimeout(save, SAVE_DELAY_MS);
+}
+
+async function save() {
+	view.saveTimer = null;
+	const saved = await api(`/api/buckets/${view.slug}`, { method: "PUT", body: JSON.stringify(view.bucket) });
+	view.bucket.updatedAt = saved.updatedAt;
+	document.getElementById("saved").textContent = "Saved";
+	await loadBucketList();
+}
+
+function textBox(target, key, props = {}) {
+	return el("input", { class: "box", value: target[key] ?? "", oninput: (event) => { target[key] = event.target.value; edited(); }, ...props });
+}
+
+function areaBox(target, key, props = {}) {
+	const area = el("textarea", { class: "box", rows: 1, value: target[key] ?? "", ...props });
+	area.addEventListener("input", () => { target[key] = area.value; growTextarea(area); edited(); });
+	requestAnimationFrame(() => growTextarea(area));
+	return area;
+}
+
+function removeButton(list, index, what) {
+	return el("button", { class: "icon", title: `Remove ${what}`, "aria-label": `Remove ${what}`, onclick: () => { list.splice(index, 1); edited({ isStructural: true }); } }, "\u00d7");
+}
+
+function sectionHead(title, explanation) {
+	return el("div", { class: "section-head" }, el("h3", {}, title), el("p", { class: "hint" }, explanation));
+}
+
+function renderIntro() {
+	return el("div", { class: "intro" },
+		view.bucket.about ? el("p", { class: "about" }, view.bucket.about) : null,
+		el("ol", { class: "steps" },
+			el("li", {}, "Change the details to match your situation."),
+			el("li", {}, "Edit the questions, or add your own."),
+			el("li", {}, "Press Ask Jev. The answers show up on the right."),
+		),
+	);
+}
+
+function renderInputs() {
+	const inputs = view.bucket.inputs;
+	return el("div", {},
+		sectionHead("The details", "What Jev knows about the situation. Change a value to try a what-if."),
+		inputs.map((field, index) => el("div", { class: "card" },
+			el("div", { class: "card-head" },
+				textBox(field, "label", { placeholder: "Name this detail, e.g. Monthly rent", className: "box title-box" }),
+				removeButton(inputs, index, "detail"),
+			),
+			field.hint ? el("p", { class: "hint card-hint" }, field.hint) : null,
+			areaBox(field, "value", { placeholder: "Its value, e.g. 40,000 rupees" }),
+		)),
+		el("button", { class: "add", onclick: () => { inputs.push({ label: "", value: "" }); edited({ isStructural: true }); } }, "Add a detail"),
+	);
+}
+
+const TYPE_HINTS = {
+	noul: "Jev answers with how likely yes is, from 0% to 100%.",
+	choice: "Jev picks one option and shows how sure it is about each.",
+	score: "Jev places the answer on your scale. List the levels from lowest to highest.",
+};
+
+function labeled(caption, control) {
+	return el("label", { class: "labeled" }, el("span", { class: "caption" }, caption), control);
+}
+
+function renderTypeFields(question) {
+	if (question.type === "noul") {
+		return el("div", { class: "sub pair" },
+			labeled("Yes means (optional)", areaBox(question, "yes_means", { placeholder: "e.g. Buying is safe" })),
+			labeled("No means (optional)", areaBox(question, "no_means", { placeholder: "e.g. Buying is risky" })),
+		);
+	}
+	if (question.type === "choice") {
+		question.options ??= [];
+		return el("div", { class: "sub" },
+			el("div", { class: "opt-row captions" }, el("span", { class: "caption" }, "Option"), el("span", { class: "caption" }, "Extra detail (optional)")),
+			question.options.map((option, index) => el("div", { class: "opt-row" },
+				textBox(option, "name", { placeholder: "e.g. Keep renting" }),
+				textBox(option, "meaning", { placeholder: "What this option means" }),
+				removeButton(question.options, index, "option"),
+			)),
+			el("button", { class: "add", onclick: () => { question.options.push({ name: "", meaning: "" }); edited({ isStructural: true }); } }, "Add option"),
+		);
+	}
+	question.levels ??= [];
+	return el("div", { class: "sub" },
+		question.levels.map((level, index) => el("div", { class: "lvl-row" },
+			el("span", { class: "idx num" }, String(index + 1)),
+			el("input", { class: "box", value: level, placeholder: index === 0 ? "e.g. Low" : "e.g. High", oninput: (event) => { question.levels[index] = event.target.value; edited(); } }),
+			removeButton(question.levels, index, "level"),
+		)),
+		el("button", { class: "add", onclick: () => { question.levels.push(""); edited({ isStructural: true }); } }, "Add level"),
+	);
+}
+
+function renderQuestions() {
+	const questions = view.bucket.questions;
+	return el("div", { class: "section" },
+		sectionHead("Questions", "What you want Jev to judge. Pick how each one should be answered."),
+		questions.map((question, index) => el("div", { class: "card" },
+			el("div", { class: "card-head" },
+				el("span", { class: "card-title" }, `Question ${index + 1}`),
+				el("div", { class: "seg", role: "group", "aria-label": "How Jev answers" },
+					TYPES.map(({ type, label }) => el("button", {
+						class: question.type === type ? "on" : "",
+						onclick: () => {
+							if (question.type === type) return;
+							// Switching back keeps options or levels typed earlier; an empty list gets a starter set.
+							const hasOwnFields = (type === "choice" && question.options?.length) || (type === "score" && question.levels?.length);
+							Object.assign(question, { type }, hasOwnFields ? {} : TYPE_SEEDS[type]());
+							edited({ isStructural: true });
+						},
+					}, label)),
+				),
+				removeButton(questions, index, "question"),
+			),
+			areaBox(question, "question", { placeholder: "Ask something, e.g. Should I buy this flat now?", className: "box question-box" }),
+			el("p", { class: "hint card-hint" }, TYPE_HINTS[question.type]),
+			renderTypeFields(question),
+			el("div", { class: "keyline" },
+				el("span", { class: "caption" }, "Answer key"),
+				textBox(question, "id", { placeholder: "answer_key", className: "box mono key-box", title: "The name this answer gets in the JSON output" }),
+			),
+		)),
+		el("button", { class: "add", onclick: () => { questions.push({ id: `q${questions.length + 1}`, type: "noul", question: "" }); edited({ isStructural: true }); } }, "Add a question"),
+	);
+}
+
+function renderSetup() {
+	const setup = document.getElementById("setup");
+	setup.replaceChildren(renderIntro(), renderInputs(), renderQuestions());
+}
+
+const percent = (value) => `${Math.round(value * 100)}%`;
+
+function deltaNode(before, format) {
+	if (typeof before !== "number") return null;
+	return el("span", { class: "delta num", title: "The answer from the previous run" }, `last time ${format(before)}`);
+}
+
+function ghostNode(position) {
+	return typeof position === "number" ? el("div", { class: "ghost", style: `left: ${position * 100}%`, title: "Previous run" }) : null;
+}
+
+// Plain words for a probability of yes, so nobody has to read 0.24 as "unlikely".
+const LIKELIHOOD_WORDS = [[0.2, "Very unlikely"], [0.4, "Unlikely"], [0.6, "Could go either way"], [0.8, "Likely"], [Infinity, "Very likely"]];
+
+function renderNoul(question, answer, before) {
+	const word = LIKELIHOOD_WORDS.find(([limit]) => answer.noul < limit)[1];
+	return [
+		el("div", { class: "headline" }, el("span", { class: "big num" }, `${percent(answer.noul)} yes`), el("span", { class: "says" }, word), deltaNode(before?.noul, percent)),
+		el("div", { class: "track" }, el("div", { class: "fill", style: `width: ${answer.noul * 100}%` }), el("div", { class: "mid" }), ghostNode(before?.noul)),
+		el("div", { class: "ends" }, el("span", {}, `No: ${question.criteria?.false ?? "no"}`), el("span", {}, `Yes: ${question.criteria?.true ?? "yes"}`)),
+	];
+}
+
+function renderChoice(question, answer, before) {
+	const rows = Object.entries(answer.probabilities ?? {}).sort((left, right) => right[1] - left[1]);
+	return [
+		el("div", { class: "headline" },
+			el("span", { class: "big" }, answer.choice),
+			el("span", { class: "says num" }, `${percent(answer.probabilities?.[answer.choice] ?? 0)} sure`),
+			deltaNode(before?.probabilities?.[answer.choice], percent),
+		),
+		rows.map(([name, probability]) => el("div", { class: `choice-row ${name === answer.choice ? "win" : ""}` },
+			el("span", { class: "cname", title: name }, name, question.criteria?.[name] ? el("span", { class: "cmeaning" }, question.criteria[name]) : null),
+			el("div", { class: "track" }, el("div", { class: "fill", style: `width: ${probability * 100}%` }), ghostNode(before?.probabilities?.[name])),
+			el("span", { class: "pct num" }, percent(probability)),
+		)),
+	];
+}
+
+// Score positions come from the legend the API returns, so the scale matches its indexes.
+function renderScore(question, answer, before) {
+	const indexes = Object.keys(answer.legend ?? {}).map(Number).sort((left, right) => left - right);
+	if (indexes.length < 2) return [el("div", { class: "headline" }, el("span", { class: "big num" }, answer.score.toFixed(2)))];
+	const low = indexes[0];
+	// Level names sit at column centers, so an index maps to the center of its column.
+	const position = (score) => (score - low + 0.5) / indexes.length;
+	const nearest = indexes.reduce((best, index) => (Math.abs(index - answer.score) < Math.abs(best - answer.score) ? index : best));
+	const probabilities = indexes.map((index) => answer.probabilities?.[index] ?? 0);
+	const topProbability = Math.max(...probabilities);
+	const columns = `repeat(${indexes.length}, 1fr)`;
+	// Near a level it reads as that level; halfway it names both neighbours.
+	const lower = Math.max(low, Math.floor(answer.score));
+	const upper = Math.min(indexes.at(-1), Math.ceil(answer.score));
+	const isBetween = Math.abs(answer.score - nearest) > 0.25 && lower !== upper;
+	return [
+		el("div", { class: "headline" },
+			el("span", { class: "big" }, answer.legend[nearest]),
+			el("span", { class: "says", title: `Position ${answer.score.toFixed(2)} on the scale` }, isBetween ? `between ${answer.legend[lower]} and ${answer.legend[upper]}` : ""),
+			deltaNode(before?.score, (value) => answer.legend[Math.min(indexes.at(-1), Math.max(low, Math.round(value)))]),
+		),
+		el("div", { class: "hist", style: `grid-template-columns: ${columns}` },
+			probabilities.map((probability) => el("div", { class: `col ${probability === topProbability ? "top" : ""}`, style: `height: ${probability * 100}%`, title: percent(probability) })),
+		),
+		el("div", { class: "scale" }, el("div", { class: "marker", style: `left: ${position(answer.score) * 100}%` }), ghostNode(typeof before?.score === "number" ? position(before.score) : undefined)),
+		el("div", { class: "levels", style: `grid-template-columns: ${columns}` }, indexes.map((index) => el("span", {}, answer.legend[index]))),
+	];
+}
+
+const RENDERERS = { noul: renderNoul, choice: renderChoice, score: renderScore };
+
+function renderMeta() {
+	const meta = document.getElementById("run-meta");
+	const run = view.bucket?.lastRun;
+	if (!meta || !run) return;
+	meta.replaceChildren(
+		`Asked at ${new Date(run.ranAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}, took ${(run.elapsedMs / 1000).toFixed(1)} s. Thin lines mark last time's answers.`,
+		view.isEditedSinceRun ? el("span", { class: "stale" }, " You changed something since, press Ask Jev to update.") : "",
+	);
+}
+
+function renderAnswers() {
+	const answers = document.getElementById("answers");
+	const attempt = view.attempt;
+	const run = view.bucket.lastRun;
+	const children = [el("h2", {}, "Answers")];
+
+	if (attempt && attempt.status !== "ok") {
+		children.push(el("div", { class: "banner error" },
+			attempt.status === "invalid" ? "Fix these before asking:" : "Jev call failed:",
+			el("ul", {}, (attempt.errors ?? []).map((message) => el("li", {}, message))),
+		));
+	} else if (attempt?.mode === "shape") {
+		children.push(el("div", { class: "banner info" }, attempt.errors?.[0] ?? "No key configured."));
+	}
+
+	if (!run) {
+		children.push(el("div", { class: "empty" },
+			el("p", {}, "Nothing asked yet. Press Ask Jev and the answers show up here."),
+			el("ul", { class: "legend" },
+				el("li", {}, el("b", {}, "Yes / no"), " questions show how likely yes is."),
+				el("li", {}, el("b", {}, "Pick one"), " questions rank the options, best first."),
+				el("li", {}, el("b", {}, "Scale"), " questions show where the answer lands between your levels."),
+			),
+		));
+		answers.replaceChildren(...children);
+		return;
+	}
+
+	children.push(el("p", { class: "meta num", id: "run-meta" }));
+	const previousAnswers = view.bucket.previousRun?.output?.answers ?? {};
+	for (const [id, question] of Object.entries(run.request.questions)) {
+		const answer = run.output.answers[id];
+		const before = previousAnswers[id]?.type === question.type ? previousAnswers[id] : undefined;
+		children.push(el("div", { class: "acard" },
+			el("div", { class: "qtext" }, question.instructions),
+			RENDERERS[question.type](question, answer, before),
+		));
+	}
+
+	const requestJson = JSON.stringify(run.request, null, 2);
+	children.push(el("details", { class: "raw" },
+		el("summary", {}, "Request and response JSON"),
+		el("p", {}, el("button", { class: "copy", onclick: async (event) => {
+			await navigator.clipboard.writeText(requestJson);
+			event.target.textContent = "Copied";
+		} }, "Copy request")),
+		el("pre", {}, requestJson),
+		el("pre", {}, JSON.stringify(run.output, null, 2)),
+	));
+	answers.replaceChildren(...children);
+	renderMeta();
+}
+
+async function ask() {
+	if (view.isRunning || !view.bucket) return;
+	clearTimeout(view.saveTimer);
+	view.isRunning = true;
+	const button = document.getElementById("ask");
+	button.disabled = true;
+	button.textContent = "Asking";
+	try {
+		const { run, bucket } = await api(`/api/buckets/${view.slug}/run`, { method: "POST", body: JSON.stringify(view.bucket) });
+		view.attempt = run;
+		view.bucket.lastRun = bucket.lastRun;
+		view.bucket.previousRun = bucket.previousRun;
+		if (run.status === "ok" && run.mode === "live") view.isEditedSinceRun = false;
+		document.getElementById("saved").textContent = "Saved";
+	} catch (error) {
+		view.attempt = { status: "error", errors: [error.message] };
+	} finally {
+		view.isRunning = false;
+		button.disabled = false;
+		button.textContent = "Ask Jev";
+	}
+	renderAnswers();
+	await loadBucketList();
+}
+
+async function loadBucketList() {
+	view.buckets = await api("/api/buckets");
+	const nav = document.getElementById("buckets");
+	nav.replaceChildren(...view.buckets.map((entry) => el("a", { href: `#${entry.slug}`, class: entry.slug === view.slug ? "active" : "" }, entry.name)));
+}
+
+async function openBucket(slug) {
+	if (view.saveTimer) {
+		clearTimeout(view.saveTimer);
+		await save();
+	}
+	view.slug = slug;
+	view.bucket = await api(`/api/buckets/${slug}`);
+	view.bucket.inputs ??= [];
+	view.bucket.questions ??= [];
+	view.attempt = null;
+	view.isEditedSinceRun = false;
+	document.getElementById("name").value = view.bucket.name ?? slug;
+	document.getElementById("saved").textContent = "";
+	document.title = `${view.bucket.name} \u00b7 Jev playground`;
+	renderSetup();
+	renderAnswers();
+	await loadBucketList();
+}
+
+async function newBucket() {
+	const name = prompt("Name for the new bucket");
+	if (!name) return;
+	const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "bucket";
+	await api(`/api/buckets/${slug}`, {
+		method: "PUT",
+		body: JSON.stringify({ name, inputs: [{ label: "Situation", value: "" }], questions: [{ id: "q1", type: "noul", question: "" }] }),
+	});
+	location.hash = slug;
+}
+
+async function start() {
+	document.getElementById("ask").addEventListener("click", ask);
+	document.getElementById("new-bucket").addEventListener("click", newBucket);
+	document.getElementById("name").addEventListener("input", (event) => {
+		if (!view.bucket) return;
+		view.bucket.name = event.target.value;
+		edited();
+	});
+	document.addEventListener("keydown", (event) => {
+		if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+			event.preventDefault();
+			ask();
+		}
+	});
+	window.addEventListener("hashchange", () => openBucket(location.hash.slice(1)));
+
+	await loadBucketList();
+	const slug = location.hash.slice(1) || view.buckets[0]?.slug;
+	if (slug) {
+		await openBucket(slug);
+	} else {
+		document.getElementById("setup").replaceChildren(el("div", { class: "empty" }, "No buckets yet. Ask Cline to set one up, or make a new one."));
+	}
+}
+
+start().catch((error) => {
+	document.getElementById("answers").replaceChildren(el("div", { class: "banner error" }, `Could not load the playground: ${error.message}`));
+});
+</script>
+</body>
+</html>
