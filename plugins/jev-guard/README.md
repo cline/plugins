@@ -29,7 +29,7 @@ A Cline plugin that checks everything the agent reads (web pages, files, command
 | Ask me | The result with the flagged paragraphs removed, plus an instruction to stop and ask you before going on. |
 | Block it | The result with the flagged paragraphs removed, plus a notice saying what was removed. It carries on without them. |
 
-When several checks fire, the most severe action wins. Notices start with `[Jev guard: a safety check the user installed in this harness...]`, and the plugin's rule tells the agent those come from the harness, not from the content. Without that label, models treat the notice itself as a possible injection.
+When several checks fire, the most severe action wins. Notices start with `[Jev guard: a safety check the user installed in this harness...]` and reach the agent as Cline hook context (a `<hook_context source="PostToolUse">` block that tool output cannot fake). The plugin's rule tells the agent to trust a notice only in that block, so a web page or file that copies the label is treated as content, not as the harness. Without the label, models treat the notice itself as a possible injection.
 
 ## Layout
 
