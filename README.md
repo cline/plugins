@@ -32,6 +32,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `jev-playground` | A local page for asking Jev yes/no, pick-one, and scale questions that Cline sets up for you. |
 | `linear` | Linear SDK scripting skill for issue, project, team, cycle, and comment workflows. |
 | `mac-notify` | macOS notifications when a Cline run completes. |
+| `microsoft-docs` | Official Microsoft Learn documentation and code samples through MCP. |
 | `nanobanana` | Image generation through OpenRouter and Gemini image models. |
 | `speak` | Speaks completed Cline replies with ElevenLabs text to speech. |
 | `typescript-lsp` | TypeScript language service `goto_definition` support. |
