@@ -1,0 +1,20 @@
+{
+  "name": "azure",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin for Azure MCP tools and detailed Azure workflow skills.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "mcp",
+          "skills"
+        ]
+      }
+    ]
+  }
+}
