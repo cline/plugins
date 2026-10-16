@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+ARCH="$(uname -m)"
+case "$ARCH" in
+	x86_64) ARCH="amd64" ;;
+	aarch64) ARCH="arm64" ;;
+esac
+
+BINARY=""
+for candidate in \
+	"${PLUGIN_ROOT}/bin/lumen" \
+	"${PLUGIN_ROOT}/bin/lumen-${OS}-${ARCH}"; do
+	if [ -x "$candidate" ]; then
+		BINARY="$candidate"
+		break
+	fi
+	done
+
+expected_sha256() {
+	case "$1" in
+		lumen-0.0.41-darwin-amd64) echo "6cb46d6f8c5683684c4410b1c9592c7a636302d0b4b5a5768545f764bccfb15d" ;;
+		lumen-0.0.41-darwin-arm64) echo "367aa8b50b1cc605801a03a814a6f953342fa1a0116074f132d32ef61c441b13" ;;
+		lumen-0.0.41-linux-amd64) echo "95b516ea716a3e21b62a9cae91b7f3bdc32720589368b50d69a28fee7d1ac412" ;;
+		lumen-0.0.41-linux-arm64) echo "ff5871979c49bbaa8485b88f3442f4fb04b5f21de1c342e138e37c83515185a9" ;;
+		*) echo "" ;;
+	esac
+}
+
+file_sha256() {
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$1" | awk '{print $1}'
+	else
+		shasum -a 256 "$1" | awk '{print $1}'
+	fi
+}
+
+if [ -z "$BINARY" ]; then
+	MANIFEST="${PLUGIN_ROOT}/.release-please-manifest.json"
+	if [ ! -f "$MANIFEST" ]; then
+		echo "Error: .release-please-manifest.json not found in ${PLUGIN_ROOT}" >&2
+		exit 1
+	fi
+
+	VERSION="v$(grep '"[.]"' "$MANIFEST" | sed 's/.*"[^"]*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')"
+	if [ -z "$VERSION" ] || [ "$VERSION" = "v" ]; then
+		echo "Error: could not read version from ${MANIFEST}" >&2
+		exit 1
+	fi
+
+	BINARY="${PLUGIN_ROOT}/bin/lumen-${OS}-${ARCH}"
+	ASSET="lumen-${VERSION#v}-${OS}-${ARCH}"
+	URL="https://github.com/ory/lumen/releases/download/${VERSION}/${ASSET}"
+	EXPECTED_SHA="$(expected_sha256 "$ASSET")"
+	if [ -z "$EXPECTED_SHA" ]; then
+		echo "Error: no pinned checksum for ${ASSET}" >&2
+		exit 1
+	fi
+
+	echo "Downloading lumen ${VERSION} for ${OS}/${ARCH}..." >&2
+	mkdir -p "$(dirname "$BINARY")"
+	DOWNLOAD="${BINARY}.download"
+	rm -f "$DOWNLOAD"
+	curl -fL --progress-bar --max-time 300 --retry 3 --retry-delay 2 "$URL" -o "$DOWNLOAD"
+	ACTUAL_SHA="$(file_sha256 "$DOWNLOAD")"
+	if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]; then
+		rm -f "$DOWNLOAD"
+		echo "Error: checksum mismatch for ${ASSET}" >&2
+		echo "Expected: ${EXPECTED_SHA}" >&2
+		echo "Actual:   ${ACTUAL_SHA}" >&2
+		exit 1
+	fi
+	mv "$DOWNLOAD" "$BINARY"
+	chmod +x "$BINARY"
+	echo "Installed lumen to ${BINARY}" >&2
+fi
+
+exec "$BINARY" "$@"
