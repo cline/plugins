@@ -1,0 +1,24 @@
+# Minimal Buildkite pipeline - test, wait, deploy.
+# Place this file at .buildkite/pipeline.yml in the repository root.
+#
+# Prerequisites:
+#   - Pipeline initial command set to: buildkite-agent pipeline upload
+#   - Agent available with access to the repository
+
+steps:
+  - label: ":hammer: Tests"
+    command: "npm test"
+    retry:
+      automatic:
+        - exit_status: -1
+          limit: 2
+        - exit_status: 143
+          limit: 2
+
+  - wait
+
+  - label: ":rocket: Deploy"
+    command: "scripts/deploy.sh"
+    branches: "main"
+    concurrency: 1
+    concurrency_group: "deploy/production"

@@ -20,6 +20,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `agents-squad` | Background subagents with presets, skills, and shared handoffs. |
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
+| `buildkite` | Buildkite MCP plus skills for pipelines, preflight, CLI, API, migrations, and agent-runtime workflows. |
 | `bundled-skills-demo` | A package plugin that proves bundled skill discovery works. |
 | `custom-compaction` | Provider message compaction through a plugin message builder. |
 | `clickhouse-data-analyst` | ClickHouse data analyst skill with supporting analysis and ClickHouse sub-skills. |

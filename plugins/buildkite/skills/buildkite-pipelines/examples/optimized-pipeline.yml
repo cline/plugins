@@ -1,0 +1,100 @@
+# Full-featured Buildkite pipeline demonstrating:
+#   - Dependency caching (cache plugin)
+#   - Parallel test execution
+#   - Build annotations for visibility
+#   - Targeted automatic retry
+#   - Artifact passing between stages
+#   - Manual deploy gate
+#   - Concurrency control
+#   - Slack notifications on failure
+#
+# Place this file at .buildkite/pipeline.yml in the repository root.
+
+notify:
+  - slack:
+      channels:
+        - "#ci-alerts"
+      message: "Build {{build.number}} failed on {{build.branch}}"
+    if: build.state == "failed"
+
+steps:
+  # Stage 1: Build with caching
+  - label: ":hammer: Build"
+    key: "build"
+    command: |
+      npm ci
+      npm run build
+    plugins:
+      - cache#v1.8.1:
+          paths:
+            - "node_modules/"
+          manifest: "package-lock.json"
+    artifact_paths:
+      - "dist/**/*"
+    retry:
+      automatic:
+        - exit_status: -1
+          limit: 2
+        - exit_status: 143
+          limit: 2
+
+  # Stage 2: Parallel tests (run after build)
+  - label: ":rspec: Tests %n"
+    depends_on: "build"
+    command: |
+      buildkite-agent artifact download "dist/*" .
+      npm test -- --shard=$((BUILDKITE_PARALLEL_JOB + 1))/$BUILDKITE_PARALLEL_JOB_COUNT
+    parallelism: 4
+    plugins:
+      - cache#v1.8.1:
+          paths:
+            - "node_modules/"
+          manifest: "package-lock.json"
+      - test-collector#v2.0.0:
+          files: "tmp/junit-*.xml"
+          format: "junit"
+    artifact_paths:
+      - "coverage/**/*"
+    retry:
+      automatic:
+        - exit_status: -1
+          limit: 2
+        - exit_status: 143
+          limit: 2
+
+  - label: ":eslint: Lint"
+    depends_on: "build"
+    command: "npm run lint"
+    plugins:
+      - cache#v1.8.1:
+          paths:
+            - "node_modules/"
+          manifest: "package-lock.json"
+    soft_fail: true
+
+  - wait
+
+  # Stage 3: Annotate results
+  - label: ":memo: Annotate"
+    command: |
+      buildkite-agent artifact download "coverage/**/*" .
+      buildkite-agent annotate --style "success" --context "coverage" \
+        "Coverage report: <a href=\"artifact://coverage/index.html\">view</a>"
+
+  # Stage 4: Deploy gate + deploy
+  - block: ":shipit: Deploy to production?"
+    branches: "main"
+
+  - label: ":rocket: Deploy"
+    command: |
+      buildkite-agent artifact download "dist/*" .
+      scripts/deploy.sh
+    branches: "main"
+    concurrency: 1
+    concurrency_group: "deploy/production"
+    concurrency_method: "eager"
+    retry:
+      automatic: false
+      manual:
+        allowed: true
+        reason: "Review logs before retrying deployment"
