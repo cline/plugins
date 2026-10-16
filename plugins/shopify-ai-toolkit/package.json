@@ -1,0 +1,25 @@
+{
+  "name": "shopify-ai-toolkit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles Shopify development skills for apps, APIs, Liquid, Hydrogen, UI extensions, and commerce workflows.",
+  "dependencies": {
+    "@shopify/theme-check-common": "3.24.0",
+    "@shopify/theme-check-docs-updater": "3.24.0",
+    "@shopify/theme-check-node": "3.24.0",
+    "typescript": "5.9.3"
+  },
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
