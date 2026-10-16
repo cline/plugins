@@ -20,6 +20,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `agents-squad` | Background subagents with presets, skills, and shared handoffs. |
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
+| `brightdata` | Bright Data workflow skills for authorized web data collection, scraper development, market research, and RAG pipelines. |
 | `bundled-skills-demo` | A package plugin that proves bundled skill discovery works. |
 | `custom-compaction` | Provider message compaction through a plugin message builder. |
 | `clickhouse-data-analyst` | ClickHouse data analyst skill with supporting analysis and ClickHouse sub-skills. |
