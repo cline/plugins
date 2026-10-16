@@ -1,0 +1,279 @@
+---
+description: Detect missing authorization checks in Forge resolvers for sensitive operations
+globs:
+alwaysApply: false
+---
+
+Context
+
+- Forge resolvers handle requests from Custom UI via the bridge `invoke()` call. The browser context is untrusted; all authorization must happen server-side in the resolver.
+- There is no separate "admin resolver" vs "user resolver" at the platform level. Every resolver handler attached to a module is invokable by any user who can load that app surface (e.g. issue panel, macro). The frontend calls resolvers via `invoke(resolverKey, payload)` from `@forge/bridge`; display conditions only hide UI and do not block invocation.
+- Related CWE: CWE-862 (Missing Authorization), CWE-863 (Incorrect Authorization).
+- Authentication != Authorization. A user being signed in (authenticated) does NOT mean they have access to all resources in the payload (authorization).
+- Common issues: 
+  - Relying on client-side checks or display conditions instead of resolver-side authorization.
+  - Resolvers intended for admins only (e.g. getSecretConfig, adminAction) can be invoked by a normal user if the resolver does not enforce authorization server-side. The same handler code path runs regardless of who called it.
+
+
+Scope & Signals
+
+- Sources: `payload` parameter in resolver definitions, `context` object.
+- Trust boundary: Everything from the client (payload, UI state) is untrusted.
+- Red flags:
+  - Resolvers that mutate data without checking user role/permissions.
+  - Direct use of payload IDs to access resources without ownership validation.
+  - Assuming display conditions provide authorization.
+  - For every resolver that performs admin-only operations (such as storage.getSecret, mutations, product API calls with asApp, config access), verify that the resolver enforces authorization at the start using trusted server-side sources (context.accountId, Atlassian permission APIs, or stored ownership). If it only relies on display conditions or client-provided role/payload fields, treat it as missing authorization and flag that a non-admin user can invoke it.
+  - Assuming that because the UI is shown in a specific context (e.g., a repository page), the user has access to all the data associated with that resource.
+
+Vulnerable Patterns
+
+```javascript
+// VULNERABLE - no authorization, directly uses payload
+resolver.define('deleteComment', async ({ payload }) => {
+  // Attacker can delete any comment by providing arbitrary commentId
+  await storage.delete(`comment-${payload.commentId}`);
+  return { success: true };
+});
+
+// VULNERABLE - assumes caller is authorized because UI is visible
+resolver.define('getSecretConfig', async ({ payload, context }) => {
+  // Display conditions hide UI but don't prevent direct invoke()
+  const config = await storage.getSecret('admin-config');
+  return config;
+});
+
+// VULNERABLE - client-provided role/permission used for authz
+resolver.define('adminAction', async ({ payload }) => {
+  if (payload.isAdmin) {  // Client can lie about this!
+    await performAdminAction();
+  }
+});
+
+// VULNERABLE - assumes UI context means user has access
+// This is shown in Bitbucket repo settings, so developer assumes authorization
+resolver.define('getRepoSettings', async ({ payload, context }) => {
+  // WRONG: "User is viewing this repo page, so they must have access"
+  // REALITY: Attacker can call this with ANY repoUuid via invoke()
+  const settings = await storage.get(`repo-settings-${payload.repoUuid}`);
+  return settings;
+});
+```
+
+Secure Patterns
+
+```javascript
+// SECURE - verify ownership before delete
+resolver.define('deleteComment', async ({ payload, context }) => {
+  const comment = await storage.get(`comment-${payload.commentId}`);
+  
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+  
+  // Verify the requesting user owns this comment
+  if (comment.authorAccountId !== context.accountId) {
+    throw new Error('Not authorized to delete this comment');
+  }
+  
+  await storage.delete(`comment-${payload.commentId}`);
+  return { success: true };
+});
+
+// SECURE - verify admin role server-side
+resolver.define('getSecretConfig', async ({ payload, context }) => {
+  const isAdmin = await checkUserIsAdmin(context.accountId);
+  if (!isAdmin) {
+    throw new Error('Admin access required');
+  }
+  return await storage.getSecret('admin-config');
+});
+
+// SECURE - use Atlassian APIs to verify permissions
+resolver.define('updateIssue', async ({ payload, context }) => {
+  const api = asUser();
+  const perms = await api.requestJira(
+    route`/rest/api/3/mypermissions?issueId=${payload.issueId}&permissions=EDIT_ISSUES`
+  );
+  
+  if (!perms.permissions.EDIT_ISSUES.havePermission) {
+    throw new Error('Cannot edit this issue');
+  }
+  
+  // Proceed with authorized operation
+});
+
+// SECURE - returning Bitbucket API data directly (NO extra check needed)
+resolver.define('getRepositoryInfo', async ({ payload, context }) => {
+  const api = asUser();
+  
+  // When returning data DIRECTLY from Bitbucket API, no extra validation needed.
+  // The API call with asUser() automatically enforces permissions:
+  // - User has access -> Returns repo data
+  // - User lacks access -> Returns 404
+  // Authorization is handled by Bitbucket API itself.
+  const repo = await api.requestBitbucket(
+    route`/2.0/repositories/${payload.workspaceId}/${payload.repositoryUuid}`
+  );
+  return await repo.json(); // SECURE - API already validated access
+});
+
+// SECURE - verify Bitbucket repository access before returning app storage data
+resolver.define('getAppRepoData', async ({ payload, context }) => {
+  const api = asUser();
+  
+  // WHY THIS CHECK IS NEEDED:
+  // We're returning data from OUR storage, not directly from Bitbucket API.
+  // Storage doesn't validate permissions - we must verify user has Bitbucket
+  // access to this repository BEFORE returning our app's data for it.
+  //
+  // The Bitbucket API call (asUser) automatically enforces permissions:
+  // - If user has access -> API returns repo data (200)
+  // - If user lacks access -> API returns 404
+  // This validates authorization without needing explicit permission checks.
+  try {
+    await api.requestBitbucket(
+      route`/2.0/repositories/${payload.workspaceId}/${payload.repositoryUuid}`
+    );
+    // Success -> user has access to this repository
+  } catch (error) {
+    // User doesn't have access or repository doesn't exist
+    throw new Error('Repository not found or access denied');
+  }
+  
+  // NOW safe to retrieve app-specific data for this repository
+  const appData = await storage.get(`repo-data-${payload.repositoryUuid}`);
+  return appData;
+});
+
+// SECURE - validates access even when called from repo settings page
+resolver.define('getRepoSettings', async ({ payload, context }) => {
+  const api = asUser();
+  
+  // Don't assume UI context = authorization
+  // Attacker can manipulate payload.repoUuid to access OTHER repositories
+  // Call Bitbucket API with asUser() to validate access to THIS specific repository
+  try {
+    await api.requestBitbucket(
+      route`/2.0/repositories/${payload.workspaceId}/${payload.repoUuid}`
+    );
+    // API succeeded -> user has access
+  } catch (error) {
+    throw new Error('Repository not found or access denied');
+  }
+  
+  // Now safe to return our app's settings for this repository
+  const settings = await storage.get(`repo-settings-${payload.repoUuid}`);
+  return settings;
+});
+
+// SECURE - verify Bitbucket repository permissions for specific actions
+resolver.define('setBitbucketRepoConfig', async ({ payload, context }) => {
+  const api = asUser();
+  
+  // Check if user has admin access to the repository
+  try {
+    const repo = await api.requestBitbucket(
+      route`/2.0/repositories/${payload.workspaceId}/${payload.repositoryUuid}`
+    );
+    const repoData = await repo.json();
+    
+    // Verify user has admin permissions (Bitbucket returns 404 if no access)
+    if (!repoData || !repoData.uuid) {
+      throw new Error('Access denied');
+    }
+  } catch (error) {
+    throw new Error('Repository not found or insufficient permissions');
+  }
+  
+  // Safe to update configuration for this repository
+  await storage.set(`repo-config-${payload.repositoryUuid}`, payload.config);
+  return { success: true };
+});
+```
+
+Detection Checklist
+
+- [ ] List all resolver definitions and categorize by sensitivity (read/write/delete/admin).
+- [ ] For each write/delete/admin resolver, verify presence of authorization logic.
+- [ ] Check that authorization uses trusted sources (context.accountId, Atlassian APIs) not payload.
+- [ ] Verify ownership checks compare against stored/authoritative data, not client claims.
+- [ ] Look for resolvers that access storage.getSecret() or perform mutations without checks.
+- [ ] For resolvers that appear admin-only (naming, UI placement, or docs): confirm they enforce server-side authz; otherwise any user who can invoke the resolver can perform the action.
+- [ ] For Bitbucket-based apps: Check repository UUID/slug from payload is validated via Bitbucket API before data access.
+- [ ] For Confluence-based apps: Check page/space IDs from payload is validated via Confluence API before data access.
+- [ ] For cross-product apps: Verify resource access for each product's resources independently.
+- [ ] Don't assume UI context provides authorization - even if triggered from authenticated frontend. However, note that these may raise False Positives. Ensure you identify every step in the chain of calls to validate if a true threat or risk exists.
+
+When Authorization Checks May Not Be Required - Legitimate exceptions where resource ID validation might not be needed are below. Please use the following to ensure False Positives are not raised.
+
+1. User-scoped data only- Resolver only accesses data keyed by `context.accountId`:
+   ```javascript
+   // OK - only accesses current user's data
+   resolver.define('getMyPreferences', async ({ context }) => {
+     return await storage.get(`user-prefs-${context.accountId}`);
+   });
+   ```
+
+2. Global/public data - No sensitive or user-specific information:
+   ```javascript
+   // OK - public feature flags, no authorization needed
+   resolver.define('getFeatureFlags', async () => {
+     return await storage.get('global-feature-flags');
+   });
+   ```
+
+3. Context-derived resource IDs - Resource ID comes from trusted `context`, not `payload`:
+   ```javascript
+   // OK - uses context.extension.config which is validated by Forge
+   resolver.define('getConfigData', async ({ context }) => {
+     const pageId = context.extension.config.pageId; // From manifest context
+     return await getPageData(pageId, context);
+   });
+   ```
+
+RED FLAGS - Cases in which Authorization IS required:
+
+- Resource IDs from `payload` (user-controlled)
+- Accessing data for resources other than current user
+- Any mutation operations
+- Accessing secrets or sensitive configuration
+- Cross-resource operations (accessing Repo B while viewing Repo A)
+
+Common Authorization Sources (Trusted)
+
+- `context.accountId` - The authenticated user's Atlassian account ID
+- `context.installContext` - Installation context (cloudId, siteUrl)
+- Jira API permission checks (`/rest/api/3/mypermissions`, `/rest/api/3/permissions/check`)
+- Confluence API permission checks (`/rest/api/content/{id}/permission/check`)
+- Bitbucket API access validation (GET `/2.0/repositories/{workspace}/{repo_slug}` - returns 404 if no access)
+- Stored ownership data (author IDs, project memberships)
+
+Common Anti-Patterns (Untrusted)
+
+- `payload.isAdmin`, `payload.userRole` - Client can fabricate
+- `payload.hasPermission` - Client can lie
+- Assuming display conditions prevent access
+
+PoC / Test Leads
+
+- Directly invoke resolvers via bridge with manipulated payload.
+- Test as low-privilege user accessing resources owned by others.
+- Bypass UI and call sensitive resolvers directly with GraphQL/invoke.
+- Test with forged payload fields (isAdmin: true, role: 'admin').
+
+Remediation Guidance (advisory)
+
+- Treat all resolver payloads as untrusted attacker input.
+- Implement authorization checks at the start of every sensitive resolver.
+- Use `context.accountId` for user identity, not payload fields.
+- Query Atlassian APIs or stored data to verify permissions.
+- Return generic errors that don't leak information about resource existence.
+
+Reporting Guidance
+
+- Document each resolver lacking authorization with its function name and file location.
+- Describe what sensitive operation is unprotected.
+- Provide PoC payload showing unauthorized access.
+- Map to CWE-862; note if display conditions gave false sense of security.
+

@@ -1,0 +1,146 @@
+---
+description: Detect reliance on display conditions as authorization controls in Forge apps
+globs:
+alwaysApply: false
+---
+
+Context
+
+- Forge display conditions only control UI visibility; they do NOT provide authorization. Attackers can bypass hidden UI by directly invoking resolvers via GraphQL or the bridge.
+- Related CWE: CWE-862 (Missing Authorization), CWE-656 (Reliance on Security Through Obscurity).
+- Documented footgun: PBAC-292 - Display conditions mistaken for authorization.
+
+The Security Gap
+
+```
+Display Condition: "Only show admin panel if user.isAdmin"
+
+User View (Normal):                  Attacker View:
+-----------------------              -----------------------
+-  Regular UI         -              -  Direct invoke()    -
+-  (Admin hidden)     -              -  to resolver        -
+-----------------------              -----------------------
+         v                                    v
+   Can't see admin                    Calls admin resolver
+   features                           DIRECTLY - bypasses UI!
+```
+
+Vulnerable Patterns
+
+```yaml
+# manifest.yml - Display condition gives false sense of security
+modules:
+  jira:issuePanel:
+    - key: admin-panel
+      title: Admin Settings
+      function: adminPanelResolver
+      displayConditions:
+        - condition: user_is_admin  # ONLY hides UI!
+```
+
+```javascript
+// VULNERABLE - Resolver assumes display condition provides auth
+resolver.define('getAdminConfig', async ({ payload, context }) => {
+  // No authorization check! Assumes only admins can call this
+  // because display condition hides the UI
+  const config = await storage.getSecret('admin-config');
+  return config;
+});
+
+// VULNERABLE - Resolver trusts that hidden UI means no access
+resolver.define('deleteAllData', async ({ payload }) => {
+  // "Only admins see the delete button" is NOT authorization!
+  await dangerousDeleteOperation();
+  return { success: true };
+});
+```
+
+Secure Patterns
+
+```javascript
+// SECURE - Authorization in resolver regardless of display conditions
+resolver.define('getAdminConfig', async ({ payload, context }) => {
+  // Verify admin status server-side
+  const isAdmin = await checkUserIsAdmin(context.accountId);
+  if (!isAdmin) {
+    throw new Error('Admin access required');
+  }
+  
+  const config = await storage.getSecret('admin-config');
+  return config;
+});
+
+// SECURE - Full authorization check
+resolver.define('deleteAllData', async ({ payload, context }) => {
+  // Check permission via Atlassian API
+  const api = asUser();
+  const perms = await api.requestJira(
+    route`/rest/api/3/mypermissions?permissions=ADMINISTER_PROJECTS`
+  );
+  
+  if (!perms.permissions.ADMINISTER_PROJECTS.havePermission) {
+    throw new Error('Insufficient permissions');
+  }
+  
+  await dangerousDeleteOperation();
+  return { success: true };
+});
+```
+
+Detection Checklist
+
+- [ ] Find all `displayConditions` in manifest.yml modules.
+- [ ] For each conditional module, identify associated resolvers/functions.
+- [ ] Check if those resolvers have independent authorization checks.
+- [ ] Flag resolvers that assume display conditions provide security.
+- [ ] Look for admin/privileged resolvers without server-side auth.
+
+Bypass Demonstration
+
+```javascript
+// Attacker can call hidden resolver directly:
+import { invoke } from '@forge/bridge';
+
+// This works even if UI is hidden by displayConditions!
+const adminConfig = await invoke('getAdminConfig', {});
+console.log(adminConfig);  // Sensitive data exposed
+```
+
+Display Condition Types (All Bypassable)
+
+```yaml
+# All of these only hide UI - none provide authorization:
+displayConditions:
+  - condition: user_is_admin
+  - condition: user_is_logged_in  
+  - condition: has_project_permission
+    params:
+      permission: ADMINISTER_PROJECTS
+  - condition: entity_property_exists
+    params:
+      propertyKey: feature-enabled
+```
+
+PoC / Test Leads
+
+- Identify a module with displayConditions.
+- As a non-qualifying user, directly call `invoke('resolverName', payload)`.
+- Verify if the resolver returns data or performs actions.
+- Test admin-only features as regular user via direct invocation.
+
+Remediation Guidance (advisory)
+
+- Treat display conditions as UX convenience only.
+- Implement full authorization in every resolver, regardless of UI visibility.
+- Use `context.accountId` with Atlassian permission APIs for verification.
+- Document that display conditions provide defense-in-depth, not authorization.
+- Add warning comments in resolvers that correspond to conditional modules.
+
+Reporting Guidance
+
+- List modules with displayConditions and their resolvers.
+- Document missing authorization in corresponding resolvers.
+- Provide bypass PoC using direct invoke().
+- Explain impact of unauthorized access.
+- Map to CWE-862, CWE-656.
+

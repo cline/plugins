@@ -1,0 +1,161 @@
+---
+description: Software Composition Analysis for Forge app dependencies
+globs:
+alwaysApply: false
+---
+
+Context
+
+- Forge apps depend on npm packages that may contain known vulnerabilities. SCA identifies CVEs in dependencies.
+- Related CWE: CWE-1104 (Use of Unmaintained Third Party Components).
+- Required for Marketplace security compliance.
+
+SCA Tools and Commands
+
+```bash
+# npm audit (built-in)
+npm audit --json > npm-audit.json
+npm audit fix  # Auto-fix where possible
+
+# Snyk (recommended)
+snyk test --json > snyk-results.json
+snyk monitor  # Continuous monitoring
+
+# OSV Scanner (Google)
+osv-scanner --lockfile=package-lock.json
+
+# Trivy
+trivy fs --scanners vuln .
+```
+
+Key Vulnerability Patterns for Forge
+
+| Package | Vulnerability Type | Forge Impact |
+|---------|-------------------|--------------|
+| lodash < 4.17.21 | Prototype Pollution | asUser->asApp escalation |
+| axios < 0.21.1 | SSRF | Request forgery |
+| minimist < 1.2.6 | Prototype Pollution | Various |
+| node-fetch < 2.6.7 | Header injection | Request manipulation |
+| jsonwebtoken < 9.0.0 | JWT bypass | Auth bypass |
+
+Detection Process
+
+```bash
+# 1. Check for vulnerable packages
+npm audit
+
+# 2. Detailed analysis
+npm ls lodash  # Check specific package version
+
+# 3. Review for Forge-specific risks
+# Check if vulnerable package is used in:
+# - Resolver code (backend)
+# - Custom UI (frontend)
+# - Build process only (lower risk)
+```
+
+Interpreting Results
+
+```
+------------------------------------------------------------------------
+- Severity      - Action Required                                      -
+------------------------------------------------------------------------
+- Critical      - Immediate update or removal                          -
+- High          - Update before next release                           -
+- Medium        - Plan update; assess exploitability                   -
+- Low           - Track; update during maintenance                     -
+------------------------------------------------------------------------
+```
+
+Example Analysis
+
+```bash
+# npm audit output
+------------------------------------------------------------------------
+- High          - Prototype Pollution in lodash                        -
+------------------------------------------------------------------------
+- Package       - lodash                                               -
+- Dependency of - some-package                                         -
+- Path          - some-package > lodash                                -
+- More info     - https://npmjs.com/advisories/1065                    -
+------------------------------------------------------------------------
+
+# Resolution
+npm update lodash
+# or if nested dependency:
+npm update some-package
+# or force resolution in package.json:
+"overrides": {
+  "lodash": "^4.17.21"
+}
+```
+
+Detection Checklist
+
+- [ ] Run `npm audit` and record findings.
+- [ ] Run Snyk or alternative SCA tool.
+- [ ] Check for Forge-specific high-risk packages (lodash, axios).
+- [ ] Assess if vulnerable code paths are reachable.
+- [ ] Verify build-only dependencies vs runtime dependencies.
+- [ ] Check for outdated but not yet vulnerable packages.
+
+False Positive Handling
+
+```
+# Some vulnerabilities may not apply:
+
+1. Build-only dependencies
+   - Vulnerability in webpack plugin
+   - Not included in runtime bundle
+   - Lower risk but should still update
+
+2. Unused code paths
+   - Vulnerable function not imported
+   - Assess actual usage
+
+3. Mitigated by Forge platform
+   - Some network-level vulns blocked by Forge egress controls
+```
+
+Remediation Approaches
+
+```bash
+# 1. Direct update (preferred)
+npm update package-name
+
+# 2. Force specific version
+npm install package-name@fixed-version
+
+# 3. Override nested dependency
+# In package.json:
+{
+  "overrides": {
+    "vulnerable-package": "^fixed.version"
+  }
+}
+
+# 4. Replace package entirely
+npm uninstall old-package
+npm install alternative-package
+```
+
+Reporting Guidance
+
+- List all vulnerabilities with severity, package, and CVE.
+- Note which are runtime vs build-only dependencies.
+- Assess exploitability in Forge context.
+- Provide specific version upgrade paths.
+- Map to CWE-1104; include CVE references.
+
+CI/CD Integration
+
+```yaml
+# In bitbucket-pipelines.yml
+- step:
+    name: Dependency Scan
+    script:
+      - npm audit --audit-level=high
+      - snyk test --severity-threshold=high
+    # Fail build on high/critical vulnerabilities
+```
+
