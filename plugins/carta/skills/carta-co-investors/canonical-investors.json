@@ -1,0 +1,199 @@
+{
+  "groupings": [
+    {
+      "canonical": "Y Combinator",
+      "patterns": [
+        "Y Combinator%",
+        "YC %",
+        "YCP%",
+        "YCC%",
+        "YCCG%",
+        "YC ESP%",
+        "YC Holdings%",
+        "AVCF%",
+        "AAVCF%"
+      ]
+    },
+    {
+      "canonical": "Andreessen Horowitz",
+      "patterns": [
+        "%Andreessen Horowitz%",
+        "AH American Dynamism%",
+        "AH 20%",
+        "a16z%"
+      ]
+    },
+    {
+      "canonical": "Sequoia Capital",
+      "patterns": [
+        "%Sequoia Capital%"
+      ]
+    },
+    {
+      "canonical": "Kleiner Perkins",
+      "patterns": [
+        "%Kleiner Perkins%",
+        "KPCB%"
+      ]
+    },
+    {
+      "canonical": "GV",
+      "patterns": [
+        "GV %",
+        "%Google Ventures%"
+      ]
+    },
+    {
+      "canonical": "SV Angel",
+      "patterns": [
+        "%SV Angel%"
+      ]
+    },
+    {
+      "canonical": "Soma Capital",
+      "patterns": [
+        "%Soma Capital%"
+      ]
+    },
+    {
+      "canonical": "FJ Labs",
+      "patterns": [
+        "%FJ Labs%"
+      ]
+    },
+    {
+      "canonical": "Founders Fund",
+      "patterns": [
+        "%Founders Fund%"
+      ]
+    },
+    {
+      "canonical": "BoxGroup",
+      "patterns": [
+        "%BoxGroup%",
+        "%Box Group%"
+      ]
+    },
+    {
+      "canonical": "General Catalyst",
+      "patterns": [
+        "%General Catalyst%"
+      ]
+    },
+    {
+      "canonical": "Greylock",
+      "patterns": [
+        "%Greylock%"
+      ]
+    },
+    {
+      "canonical": "Bessemer Venture Partners",
+      "patterns": [
+        "%Bessemer%"
+      ]
+    },
+    {
+      "canonical": "Accel",
+      "patterns": [
+        "Accel %",
+        "Accel,%",
+        "Accel L%",
+        "Accel Growth%"
+      ]
+    },
+    {
+      "canonical": "Lightspeed Venture Partners",
+      "patterns": [
+        "%Lightspeed Venture%"
+      ]
+    },
+    {
+      "canonical": "NEA",
+      "patterns": [
+        "%New Enterprise Associates%",
+        "NEA %"
+      ]
+    },
+    {
+      "canonical": "Index Ventures",
+      "patterns": [
+        "Index Ventures%"
+      ]
+    },
+    {
+      "canonical": "Khosla Ventures",
+      "patterns": [
+        "%Khosla Ventures%"
+      ]
+    },
+    {
+      "canonical": "Insight Partners",
+      "patterns": [
+        "%Insight Partners%",
+        "Insight Venture%"
+      ]
+    },
+    {
+      "canonical": "Tiger Global",
+      "patterns": [
+        "%Tiger Global%"
+      ]
+    },
+    {
+      "canonical": "Coatue",
+      "patterns": [
+        "%Coatue%"
+      ]
+    },
+    {
+      "canonical": "Initialized Capital",
+      "patterns": [
+        "%Initialized%"
+      ]
+    },
+    {
+      "canonical": "Floodgate",
+      "patterns": [
+        "%Floodgate%"
+      ]
+    },
+    {
+      "canonical": "Fifty Years",
+      "patterns": [
+        "%Fifty Years%"
+      ]
+    },
+    {
+      "canonical": "Correlation Ventures",
+      "patterns": [
+        "%Correlation Ventures%"
+      ]
+    },
+    {
+      "canonical": "8VC",
+      "patterns": [
+        "%8VC%"
+      ]
+    },
+    {
+      "canonical": "776 Capital",
+      "patterns": [
+        "776 %",
+        "776,%"
+      ]
+    },
+    {
+      "canonical": "A-Star Partners",
+      "patterns": [
+        "A-Star%",
+        "A Star%"
+      ]
+    },
+    {
+      "canonical": "Rocket Internet Capital Partners",
+      "patterns": [
+        "%Rocket Internet Capital Partners%"
+      ]
+    }
+  ]
+}
