@@ -17,6 +17,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | Plugin | What it adds |
 | --- | --- |
 | `agent-browser` | Web and Electron browser automation via the agent-browser CLI skill. |
+| `alloydb` | AlloyDB for PostgreSQL skills for admin, schema, monitoring, health, tuning, replication, and access workflows. |
 | `agents-squad` | Background subagents with presets, skills, and shared handoffs. |
 | `background-terminal` | Long-running shell jobs with polling and cleanup tools. |
 | `branch-protector` | A hook that blocks protected branch pushes unless explicitly allowed. |
