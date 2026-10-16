@@ -1,0 +1,14 @@
+Adobe for creativity skill material
+
+Portions of this plugin's bundled skill workflows and intake form are adapted
+from Adobe's "adobe-for-creativity" skill plugin.
+
+Source manifest:
+- Name: adobe-for-creativity
+- Author: Adobe
+- Repository: https://github.com/adobe/skills
+- License: Apache-2.0
+- Source version: 1.0.2
+
+The copied skill files retain their source `license` and `metadata.version`
+frontmatter where present.
