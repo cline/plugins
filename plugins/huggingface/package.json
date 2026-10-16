@@ -1,0 +1,20 @@
+{
+  "name": "huggingface",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles Hugging Face skills and registers the Hugging Face MCP server.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills",
+          "mcp"
+        ]
+      }
+    ]
+  }
+}

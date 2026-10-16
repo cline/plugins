@@ -26,6 +26,7 @@ Each plugin lives in `plugins/<slug>`. The directory name is the install keyword
 | `env-blocker` | A hook that blocks reads of secret `.env` files. |
 | `gitignore-read-files-guard` | A hook that blocks file access to `.gitignore` ignored paths. |
 | `goal` | Completion nudges for active goals with a slash command and completion tool. |
+| `huggingface` | Hugging Face MCP plus skills for Hub, datasets, Spaces, training, evals, papers, and local models. |
 | `intercom-support-triage-slack` | Intercom conversation triage tools for support workflows. |
 | `jev-browser` | Fast browser goal execution with Jev through Vercel AI Gateway, screenshots, and isolated Chromium sessions. |
 | `jev-guard` | A Jev hook that screens tool results against plain-language checks you test on a local page. |
