@@ -1,0 +1,30 @@
+{
+  "name": "zoom",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Zoom integration skills for REST APIs, SDKs, webhooks, OAuth, MCP planning, and app workflows.",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  },
+  "peerDependencies": {
+    "@cline/sdk": "*"
+  },
+  "peerDependenciesMeta": {
+    "@cline/sdk": {
+      "optional": true
+    }
+  }
+}
