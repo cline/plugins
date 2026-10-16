@@ -1,0 +1,19 @@
+{
+  "name": "mcp-apps",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that bundles skills for building interactive MCP Apps.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "skills"
+        ]
+      }
+    ]
+  }
+}
