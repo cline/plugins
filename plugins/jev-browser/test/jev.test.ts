@@ -22,6 +22,36 @@ const observation: Observation = {
 	],
 };
 
+// Mirrors the real Vercel AI Gateway 403: a wrapper error whose cause is an
+// APICallError carrying the provider body plus the (secret) request payload.
+function gatewayFailure() {
+	const providerMessage = "SENTINEL_PROVIDER_MESSAGE";
+	const responseBody = JSON.stringify({
+		error: { message: providerMessage, type: "customer_verification_required" },
+	});
+	return Object.assign(
+		new Error("AI Gateway requires a valid credit card on file."),
+		{
+			name: "GatewayInternalServerError",
+			statusCode: 403,
+			type: "internal_server_error",
+			isRetryable: false,
+			cause: Object.assign(new Error(providerMessage), {
+				name: "AI_APICallError",
+				statusCode: 403,
+				url: "https://ai-gateway.vercel.sh/v4/ai/evaluation-model",
+				requestBodyValues: {
+					state: "SENTINEL_REQUEST_BODY",
+					page: { text: "SENTINEL_PAGE_TEXT" },
+				},
+				responseBody,
+				data: JSON.parse(responseBody),
+			}),
+		},
+	);
+}
+
+
 test("one question compares concrete actions against scrolling and terminal choices", () => {
 	const q = buildQuestions(observation, "Find cats");
 	assert.equal(q.action.type, "choice");
@@ -188,6 +218,64 @@ test("browser loop and stale-target guards (offline)", async (t) => {
 						"decision",
 					],
 				);
+			},
+		);
+		await t.test(
+			"provider failures surface status and code without leaking request data",
+			async () => {
+				await fixture();
+				const result = await runJev(
+					{ goal: "SENTINEL_GOAL" },
+					{
+						page: () => page,
+						policy: {
+							async choose() {
+								throw gatewayFailure();
+							},
+							async text() {
+								throw new Error("Unexpected helper");
+							},
+						},
+					},
+				);
+				assert.equal(result.status, "interrupted");
+				assert.deepEqual(result.failure, {
+					stage: "evaluation",
+					category: "provider_error",
+					providerStatus: 403,
+					providerType: "customer_verification_required",
+				});
+				assert.match(result.message, /403 customer_verification_required/);
+				const serialized = JSON.stringify(result);
+				assert.ok(!serialized.includes("SENTINEL_PROVIDER_MESSAGE"));
+				assert.ok(!serialized.includes("SENTINEL_REQUEST_BODY"));
+				assert.ok(!serialized.includes("SENTINEL_PAGE_TEXT"));
+				assert.ok(!serialized.includes("SENTINEL_GOAL"));
+			},
+		);
+		await t.test(
+			"errors without provider diagnostics stay unexpected_error",
+			async () => {
+				await fixture();
+				const result = await runJev(
+					{ goal: "Search" },
+					{
+						page: () => page,
+						policy: {
+							async choose() {
+								throw new Error("boom");
+							},
+							async text() {
+								throw new Error("Unexpected helper");
+							},
+						},
+					},
+				);
+				assert.equal(result.status, "interrupted");
+				assert.deepEqual(result.failure, {
+					stage: "evaluation",
+					category: "unexpected_error",
+				});
 			},
 		);
 		await t.test(
