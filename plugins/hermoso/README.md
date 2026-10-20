@@ -4,7 +4,7 @@ Bundle the Hermoso marketing skills as an installable Cline plugin.
 
 ## What It Does
 
-Installs five skills that drive the [Hermoso](https://hermoso.ai) CLI (`npx -y hermoso`), a marketing platform an agent can run end to end:
+Installs five skills that drive the [Hermoso](https://hermoso.ai) CLI (`npx -y hermoso`), an AI marketing agent and AI ad generator your agent can run end to end. No markup on models.
 
 | Skill | What it covers |
 | --- | --- |
