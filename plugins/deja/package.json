@@ -1,0 +1,24 @@
+{
+  "name": "deja",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cline plugin that recalls your past coding sessions through the local deja CLI.",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./index.ts"
+        ],
+        "capabilities": [
+          "rules",
+          "commands",
+          "skills",
+          "hooks",
+          "messageBuilders",
+          "mcp"
+        ]
+      }
+    ]
+  }
+}
