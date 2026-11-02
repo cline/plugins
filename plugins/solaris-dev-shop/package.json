@@ -1,0 +1,28 @@
+{
+  "name": "solaris-dev-shop",
+  "version": "0.66.0",
+  "private": true,
+  "type": "module",
+  "description": "61 Solaris specialist workflows and a chief-of-staff coordinator, with a bounded local intake tool.",
+  "license": "MIT",
+  "author": {
+    "name": "Solaris Technologies",
+    "url": "https://solaristek.com"
+  },
+  "repository": "https://github.com/Shaisolaris/solaris-dev-shop-cline",
+  "cline": {
+    "plugins": [
+      {
+        "paths": [
+          "./node_modules/solaris-dev-shop-cline/index.js"
+        ],
+        "capabilities": [
+          "tools"
+        ]
+      }
+    ]
+  },
+  "dependencies": {
+    "solaris-dev-shop-cline": "0.66.0"
+  }
+}
