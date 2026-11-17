@@ -271,7 +271,7 @@ function readSkillDefinitions(baseCwd: string): SkillDefinition[] {
 }
 
 function parentSessionId(ctx: AgentToolContext): string | undefined {
-	const id = ctx.metadata?.sessionId;
+	const id = ctx.sessionId ?? ctx.metadata?.sessionId;
 	return typeof id === "string" && id.trim() ? id.trim() : undefined;
 }
 
